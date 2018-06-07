@@ -24,8 +24,7 @@
    "Graphic design by <a href='https://www.mloboscoart.com'>Michael Lobosco</a>."
    ])
 
-(defn job-listing-loader []
-  [:p "loader"])
+
 
 (defn control-panel []
   [:p "controls"])
@@ -38,7 +37,7 @@
    [app-banner]
    [:div {:style {:margin 0 :background "#ffb57d"}}
     [jbl/pick-a-month]
-    [job-listing-loader]
+    [jbl/job-listing-loader]
     [control-panel]
     [job-list]]])
 

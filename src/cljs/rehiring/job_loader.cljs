@@ -1,19 +1,23 @@
 (ns rehiring.job-loader
   (:require
     [clojure.walk :as walk]
-    [rehiring.db :as rhdb]))
+    [rehiring.db :as rhdb]
+    [rehiring.events :as evt]
+    [rehiring.subs :as subs]
+    [re-frame.core :as rfr]))
 
 ;; --- loading job data -----------------------------------------
 
 (defn pick-a-month []
   (let [months (walk/keywordize-keys (js->clj js/gMonthlies))]
-    (println :really? months rhdb/SEARCH-MO-STARTING-IDX)
     [:div {:class "pickAMonth"}
      [:select {:class     "searchMonth"
                :value     (:hnId (nth months rhdb/SEARCH-MO-STARTING-IDX))
                :on-change (fn [e]
-                            (let [opt (.-target e)]
-                              (println "Hello onchange" (js->clj opt) (.-value opt))))}
+                            (let [opt (.-target e)
+                                  hnid (.-value opt)]
+                              (println "Hello onchange" (js->clj opt) hnid)
+                              (rfr/dispatch [::evt/month-set hnid])))}
       (let []
         (map (fn [mno mo-def]
                (let [{:keys [hnId desc] :as all} mo-def]
@@ -21,6 +25,11 @@
                   desc]))
           (range)
           months))]]))
+
+(defn job-listing-loader []
+  (fn []
+    (let [hn-id @(rfr/subscribe [:month-hn-id])]
+      [:p (str "loader of " hn-id)])))
 
 ;           pickAMonth() {
 ;                       return div ({ class: "pickAMonth"}
