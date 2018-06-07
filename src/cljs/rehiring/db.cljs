@@ -1,4 +1,9 @@
-(ns rehiring.db)
+(ns rehiring.db
+  (:require [clojure.walk :as walk]))
 
-(def default-db
-  {:name "re-frame"})
+(def SEARCH-MO-STARTING-IDX 0)
+
+(defn initial-db []
+  (let [months (walk/keywordize-keys (js->clj js/gMonthlies))]
+    {:months months
+     :month-hn-id (:hnId (nth months SEARCH-MO-STARTING-IDX))}))

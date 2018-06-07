@@ -4,9 +4,10 @@
     [re-frame.core :as rfr]
     [rehiring.subs :as subs]
     [rehiring.utility :as utl]
+    [rehiring.job-loader :as jbl]
     ))
 
-(declare help-list)
+(declare help-list app-banner)
 
 (def appHelpEntry
   [
@@ -23,7 +24,25 @@
    "Graphic design by <a href='https://www.mloboscoart.com'>Michael Lobosco</a>."
    ])
 
+(defn job-listing-loader []
+  [:p "loader"])
+
+(defn control-panel []
+  [:p "controls"])
+
+(defn job-list []
+  [:p "job-list"])
+
 (defn main-panel []
+  [:div
+   [app-banner]
+   [:div {:style {:margin 0 :background "#ffb57d"}}
+    [jbl/pick-a-month]
+    [job-listing-loader]
+    [control-panel]
+    [job-list]]])
+
+(defn app-banner []
   (let [helping (rgt/atom false)]
     (fn []
       [:div
