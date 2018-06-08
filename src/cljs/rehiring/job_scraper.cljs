@@ -6,7 +6,7 @@
 (defn jobs-collect [ifr-dom]
   (if-let [cont-doc (.-contentDocument ifr-dom)]
     (let [hn-body (aget (.getElementsByTagName cont-doc "body") 0)]
-      (let [things (take 20 (prim-seq (.querySelectorAll hn-body ".athing")))]
+      (let [things (take 100 (prim-seq (.querySelectorAll hn-body ".athing")))]
         (println :things (count things))
         (let [jobs (filter #(:OK %) (map job-spec things))]
           (set! (.-innerHTML hn-body) (str (take 2 jobs)))
@@ -20,7 +20,7 @@
     (doseq [child (prim-seq (.-children dom))]
       (job-spec-extend spec child))
     (when (:OK @spec)
-      (println :fini (dissoc @spec :body :body-search))
+      ;;(println :fini (dissoc @spec :body :body-search))
       @spec)))
 
 (def internOK (js/RegExp. "internship|intern" "i"))

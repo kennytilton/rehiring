@@ -7,6 +7,6 @@
   (let [months (walk/keywordize-keys (js->clj js/gMonthlies))]
     {:months months
      :month-hn-id (:hnId (nth months SEARCH-MO-STARTING-IDX))
-     :job-list-max 5
+     :job-list-max 50
      :show-job-details {} ;; key is hnId, value t/f; handle default in view
      }))

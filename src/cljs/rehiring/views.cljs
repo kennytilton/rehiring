@@ -6,6 +6,7 @@
     [rehiring.utility :as utl]
     [rehiring.job-loader :as jld]
     [rehiring.job-list :as jls]
+    [rehiring.control-panel :as cp]
     ))
 
 (declare help-list app-banner)
@@ -27,8 +28,7 @@
 
 
 
-(defn control-panel []
-  [:p "controls"])
+
 
 (defn main-panel []
   [:div
@@ -36,7 +36,7 @@
    [:div {:style {:margin 0 :background "#ffb57d"}}
     [jld/pick-a-month]
     [jld/job-listing-loader]
-    [control-panel]
+    [cp/control-panel]
     [jls/job-list]]])
 
 (defn app-banner []

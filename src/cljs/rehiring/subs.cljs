@@ -19,5 +19,6 @@
 
 (re-frame/reg-sub
   :show-job-details
-  (fn [db hn-id]
+  (fn [db [_ hn-id]]
+    ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
     (get-in db [:show-job-details hn-id])))
