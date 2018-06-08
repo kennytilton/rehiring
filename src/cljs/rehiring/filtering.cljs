@@ -24,12 +24,6 @@
     ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
     (:filter-active db)))
 
-;(re-frame/reg-sub
-;  :filter-active
-;  (fn [db [_ tag]]
-;    ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
-;    (get-in db [:filter-active tag])))
-
 (declare mk-job-selects)
 
 (def title-selects [[["REMOTE", "Does regex search of title for remote jobs"]
