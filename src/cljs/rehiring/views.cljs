@@ -4,7 +4,8 @@
     [re-frame.core :as rfr]
     [rehiring.subs :as subs]
     [rehiring.utility :as utl]
-    [rehiring.job-loader :as jbl]
+    [rehiring.job-loader :as jld]
+    [rehiring.job-list :as jls]
     ))
 
 (declare help-list app-banner)
@@ -29,17 +30,14 @@
 (defn control-panel []
   [:p "controls"])
 
-(defn job-list []
-  [:p "job-list"])
-
 (defn main-panel []
   [:div
    [app-banner]
    [:div {:style {:margin 0 :background "#ffb57d"}}
-    [jbl/pick-a-month]
-    [jbl/job-listing-loader]
+    [jld/pick-a-month]
+    [jld/job-listing-loader]
     [control-panel]
-    [job-list]]])
+    [jls/job-list]]])
 
 (defn app-banner []
   (let [helping (rgt/atom false)]
