@@ -6,11 +6,10 @@
 (defn jobs-collect [ifr-dom]
   (if-let [cont-doc (.-contentDocument ifr-dom)]
     (let [hn-body (aget (.getElementsByTagName cont-doc "body") 0)]
-      (println :jcoll cont-doc hn-body)
-      (let [things (prim-seq (.querySelectorAll hn-body ".athing"))]
+      (let [things (take 20 (prim-seq (.querySelectorAll hn-body ".athing")))]
         (println :things (count things))
         (let [jobs (filter #(:OK %) (map job-spec things))]
-          (set! (.-innerHTML hn-body) (str (take 20 jobs)))
+          (set! (.-innerHTML hn-body) (str (take 2 jobs)))
           ;;(println :j3 (take 10 jobs))
           jobs)))
     []))

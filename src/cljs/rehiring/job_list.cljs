@@ -12,14 +12,21 @@
 
 (defn job-header []
   (fn [job]
-    [:p (str "Header " (:company job))]))
+    [:div {:style {:cursor "pointer"
+                   :display "flex"}
+           :on-click #(rfr/dispatch [::evt/toggle-show-details (:hn-id job)])}
+     [:span {:on-click #(rfr/dispatch [::evt/toggle-show-details (:hn-id job)])}
+      (:title-search job)]]))
 
 (defn job-details []
   (fn [job]
     [:p (str "details " (:company job))]))
 
+;; ^{:key (str selId "-" (inc pgn))}
+
 (defn job-list-item []
   (fn [job-no job]
+    (println :keyyyyyyyyyyyy (:hn-id job) (:company job))
     [:li {:key (:hn-id job)
           :style {:cursor "pointer"
                   :padding "12px"
@@ -36,7 +43,7 @@
                   :padding         0
                   :margin          0}}
      (map (fn [jn j]
-            [job-list-item jn j])
+            ^{:key (:hn-id j)} [job-list-item jn j])
        (range)
        ;; todo sexify
        (let [raw-jobs @(rfr/subscribe [:jobs])
