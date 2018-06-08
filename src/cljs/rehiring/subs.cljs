@@ -12,8 +12,12 @@
   (fn [db]
     (:jobs db)))
 
-
 (re-frame/reg-sub
   :job-list-max
   (fn [db]
     (:job-list-max db)))
+
+(re-frame/reg-sub
+  :show-job-details
+  (fn [db hn-id]
+    (get-in db [:show-job-details hn-id])))

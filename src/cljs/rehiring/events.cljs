@@ -21,7 +21,7 @@
     (assoc db :jobs (scraper/jobs-collect ifr-dom))))
 
 (rfr/reg-event-db
-  ::toggle-show-details
+  ::toggle-show-job-details
   (fn [db [_ job-no]]
-    (println ::toggle-show-details job-no)
-    db))
+    (println ::toggle-show-job-details job-no)
+    (update-in db [:show-job-details job-no] not)))
