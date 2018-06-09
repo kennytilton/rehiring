@@ -1,23 +1,23 @@
 (ns rehiring.subs
   (:require
-   [re-frame.core :as re-frame]))
+   [re-frame.core :as rfr]))
 
-(re-frame/reg-sub
+(rfr/reg-sub
  :month-hn-id
  (fn [db]
    (:month-hn-id db)))
 
-(re-frame/reg-sub
+(rfr/reg-sub
   :jobs
   (fn [db]
     (:jobs db)))
 
-(re-frame/reg-sub
-  :job-list-max
+(rfr/reg-sub
+  :job-display-max
   (fn [db]
-    (:job-list-max db)))
+    (:job-display-max db)))
 
-(re-frame/reg-sub
+(rfr/reg-sub
   :show-job-details
   (fn [db [_ hn-id]]
     ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))

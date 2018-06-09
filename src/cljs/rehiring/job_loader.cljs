@@ -2,7 +2,6 @@
   (:require
     [clojure.walk :as walk]
     [rehiring.db :as rhdb]
-    [rehiring.events :as evt]
     [rehiring.subs :as subs]
     [re-frame.core :as rfr]
     [cljs.pprint :as pp]
@@ -13,6 +12,11 @@
 (defn monthlies-kw []
   (walk/keywordize-keys (js->clj js/gMonthlies)))
 
+(rfr/reg-event-db
+  :month-set
+  (fn [db [_ hn-id]]
+    (assoc db :month-hn-id hn-id)))
+
 (defn pick-a-month []
   (let [months (monthlies-kw)]
     [:div {:class "pickAMonth"}
@@ -22,7 +26,7 @@
                             (let [opt (.-target e)
                                   hnid (.-value opt)]
                               (println "Hello onchange" (js->clj opt) hnid)
-                              (rfr/dispatch [::evt/month-set hnid])))}
+                              (rfr/dispatch [:month-set hnid])))}
       (let []
         (map (fn [mno mo-def]
                (let [{:keys [hnId desc] :as all} mo-def]
@@ -50,6 +54,12 @@
                   (range (:pgCount moDef))))
          [mk-page-loader selId]))]))
 
+(rfr/reg-event-db
+  :month-page-collect
+  (fn [db [_ ifr-dom hn-id pg-no]]
+    ;(println :replacing-jobs hn-id pg-no)
+    (assoc db :jobs (jobs-collect ifr-dom))))
+
 (defn mk-page-loader []
   (fn [hn-id pg-no]
     (let [src-url (pp/cl-format nil "files/~a/~a.html" hn-id (or pg-no hn-id))]
@@ -57,7 +67,7 @@
       [:iframe {:src     src-url
                 :on-load #(let [ifr (.-target %)]
                             ;;(println "Loaded!!" ifr hn-id pg-no src-url)
-                            (rfr/dispatch [::evt/month-page-collect ifr hn-id pg-no]))}])))
+                            (rfr/dispatch [:month-page-collect ifr hn-id pg-no]))}])))
 
 (declare job-spec job-spec-extend)
 

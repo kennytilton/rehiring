@@ -9,16 +9,7 @@
  (fn [_ _]
    (db/initial-db)))
 
-(rfr/reg-event-db
-  ::month-set
-  (fn [db [_ hn-id]]
-    (assoc db :month-hn-id hn-id)))
 
-(rfr/reg-event-db
-  ::month-page-collect
-  (fn [db [_ ifr-dom hn-id pg-no]]
-    ;(println :replacing-jobs hn-id pg-no)
-    (assoc db :jobs (jbld/jobs-collect ifr-dom))))
 
 (rfr/reg-event-db
   ::toggle-show-job-details

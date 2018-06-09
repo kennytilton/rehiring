@@ -7,8 +7,6 @@
 
 (declare job-header job-details)
 
-
-
 (defn job-list-sort [jobs] jobs)
 
 (defn jump-to-hn [hn-id]
@@ -37,17 +35,23 @@
        ;; todo sexify
        (let [raw-jobs @(rfr/subscribe [:jobs])
              sel-jobs (flt/job-list-filter raw-jobs)]
-         (take @(rfr/subscribe [:job-list-max])
+         (take @(rfr/subscribe [:job-display-max])
            (job-list-sort sel-jobs))))]))
 
 (defn user-annotations []
   (fn [job]
     [:span (str "unotes " (:company job))]))
 
+(rfr/reg-sub
+  :job-collapse-all
+  (fn [db [_ hn-id]]
+    ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
+    (:job-collapse-all db)))
+
 (defn job-details []
   (fn [job]
     (let [deets-raw @(rfr/subscribe [:show-job-details (:hn-id job)])
-          deets deets-raw #_ (if (nil? deets-raw) true deets-raw)]
+          deets (if (nil? deets-raw) true deets-raw)]
       ;;(println :deets (:company job) deets (type (:hn-id job)))
       [:div {:class (if deets "slideIn" "slideOut")
              :style {:margin     "6px"
@@ -57,7 +61,8 @@
        [:div {:style           {:margin   "6px"
                                 :overflow "auto"}
               :on-double-click #(jump-to-hn (:hn-id job))}
-        (when @(rfr/subscribe [:show-job-details (:hn-id job)])
+        (when (and (not @(rfr/subscribe [:job-collapse-all]))
+                   @(rfr/subscribe [:show-job-details (:hn-id job)]))
           (map (fn [x node]
                  (case (.-nodeType node)
                    1 ^{:key (str (:hn-id job) "-p-" x)} [:p (.-innerHTML node)]

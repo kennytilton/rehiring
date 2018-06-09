@@ -18,7 +18,7 @@
                      (or (not (get remall "VISA")) (:visa j))))
         jobs))))
 
-(re-frame/reg-sub
+(rfr/reg-sub
   :filter-active-all
   (fn [db [_]]
     ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
