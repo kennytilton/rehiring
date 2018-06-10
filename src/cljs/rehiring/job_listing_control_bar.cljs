@@ -25,18 +25,21 @@
     [:div {:style (merge utl/hz-flex-wrap-centered {:margin-right "6px"})}
      [:span "Show:"]
      (let [rmax @(rfr/subscribe [:job-display-max])]
-       [:input {:type      "number"
-                :value     rmax
+       [:input {:type         "number"
+                :defaultValue rmax
 
-                :on-change #(let [new (.-value (.-target %))]
-                              (println "raw new" new (js/parseInt new))
-                              (rfr/dispatch [:set-result-display-max (js/parseInt new)]))
+                :on-key-press #(when (= "Enter"  (js->clj (.-key %)))
+                                 (rfr/dispatch [:set-result-display-max (js/parseInt (.-value (.-target %)))]))
 
-                :style     {:font-size    "1em"
-                            :max-width    "48px"
-                            :margin-left  "6px"
-                            :margin-right "6px"
-                            }}])]))
+                :on-blur      #(let [new (.-value (.-target %))]
+                                 (println "blur new" new (js/parseInt new))
+                                 (rfr/dispatch [:set-result-display-max (js/parseInt new)]))
+
+                :style        {:font-size    "1em"
+                               :max-width    "48px"
+                               :margin-left  "6px"
+                               :margin-right "6px"
+                               }}])]))
 (rfr/reg-sub
   :job-display-max
   (fn [db]

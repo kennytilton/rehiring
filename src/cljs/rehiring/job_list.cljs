@@ -2,6 +2,7 @@
   (:require [re-frame.core :as rfr]
             [rehiring.events :as evt]
             [rehiring.filtering :as flt]
+            [rehiring.user-annotations :as unt]
             [goog.string :as gs]
             [cljs.pprint :as pp]))
 
@@ -14,14 +15,19 @@
 
 (defn job-list-item []
   (fn [job-no job]
-    [:li {:style    {:cursor     "pointer"
-                     :padding    "12px"
-                     :background (if (zero? (mod job-no 2))
-                                   "#eee" "#f8f8f8")}
-          ;;:on-click #(rfr/dispatch [::evt/toggle-show-job-details job-no])
-          }
-     [job-header job]
-     [job-details job]]))
+    (let [excluded @(rfr/subscribe [:unotes-prop (:hn-id job) :excluded])
+          display (if (and excluded (not @(rfr/subscribe [:filter-active "Excluded"])))
+                    "none" "block")]
+      (println (:company job) (:hn-id job) excluded display)
+      [:li {:style {:cursor     "pointer"
+                    :display    display
+                    :padding    "12px"
+                    :background (if (zero? (mod job-no 2))
+                                  "#eee" "#f8f8f8")}
+            ;;:on-click #(rfr/dispatch [::evt/toggle-show-job-details job-no])
+            }
+       [job-header job]
+       [job-details job]])))
 
 (defn job-list []
   (fn []
@@ -29,18 +35,15 @@
                   :background      "#eee"
                   :padding         0
                   :margin          0}}
-     (map (fn [jn j]
-            ^{:key (:hn-id j)} [job-list-item jn j])
-       (range)
-       ;; todo sexify
-       (let [raw-jobs @(rfr/subscribe [:jobs])
-             sel-jobs (flt/job-list-filter raw-jobs)]
-         (take @(rfr/subscribe [:job-display-max])
-           (job-list-sort sel-jobs))))]))
-
-(defn user-annotations []
-  (fn [job]
-    [:span (str "unotes " (:company job))]))
+     (doall (map (fn [jn j]
+                   ^{:key (:hn-id j)} [job-list-item jn j])
+              (range)
+              ;; todo sexify
+              (let [raw-jobs @(rfr/subscribe [:jobs])
+                    sel-jobs (flt/job-list-filter raw-jobs)]
+                (println :new-seljobs (count sel-jobs))
+                (take @(rfr/subscribe [:job-display-max])
+                  (job-list-sort sel-jobs)))))]))
 
 (rfr/reg-sub
   :job-collapse-all
@@ -57,7 +60,7 @@
              :style {:margin     "6px"
                      :background "#fff"
                      :display    (if deets "block" "none")}}
-       [user-annotations job]
+       [unt/user-annotations job]
        [:div {:style           {:margin   "6px"
                                 :overflow "auto"}
               :on-double-click #(jump-to-hn (:hn-id job))}
@@ -66,7 +69,7 @@
           (map (fn [x node]
                  (case (.-nodeType node)
                    1 ^{:key (str (:hn-id job) "-p-" x)} [:p (.-innerHTML node)]
-                   3 ^{:key (str (:hn-id job) "-p-" x)}[:p (.-textContent node)]
+                   3 ^{:key (str (:hn-id job) "-p-" x)} [:p (.-textContent node)]
                    ^{:key (str (:hn-id job) "-p-" x)}
                    [:p (str "Unexpected node type = " (.-nodeType node))]))
             (range)

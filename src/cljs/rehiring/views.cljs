@@ -2,6 +2,7 @@
   (:require
     [reagent.core :as rgt]
     [re-frame.core :as rfr]
+    [rehiring.utility :as utl]
     [rehiring.subs :as subs]
     [rehiring.utility :as utl]
     [rehiring.job-loader :as jld]

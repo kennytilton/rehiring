@@ -11,4 +11,5 @@
      :toggle-details-action "expand"
      :job-display-max 3 ;; todo restore to 42
      :show-job-details {} ;; key is hnId, value t/f; handle default in view
+     :user-notes {}
      }))

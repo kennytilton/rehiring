@@ -7,22 +7,28 @@
 (defn job-list-filter [jobs]
   (if (empty? jobs)
     []
-    (let [remall @(rfr/subscribe [:filter-active-all])
-          ;; remote? @(rfr/subscribe [:filter-active "REMOTE"])
-          ]
-      (println :remote-filtering remall)
+    (let [remall @(rfr/subscribe [:filter-active-all])]
+
       (filter (fn [j]
-                (and (or (not (get remall "REMOTE")) (:remote j))
-                     (or (not (get remall "ONSITE")) (:onsite j))
-                     (or (not (get remall "INTERNS")) (:interns j))
-                     (or (not (get remall "VISA")) (:visa j))))
+                (let [unotes @(rfr/subscribe [:unotes (:hn-id j)])]
+                  (println :filtsee-unote unotes)
+                  (and (or (not (get remall "REMOTE")) (:remote j))
+                       (or (not (get remall "ONSITE")) (:onsite j))
+                       (or (not (get remall "INTERNS")) (:interns j))
+                       (or (not (get remall "VISA")) (:visa j))
+                       (or (not (get remall "excluded")) (:excluded unotes))
+                       )))
         jobs))))
 
-(rfr/reg-sub
-  :filter-active-all
+(rfr/reg-sub :filter-active-all
   (fn [db [_]]
     ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
     (:filter-active db)))
+
+(rfr/reg-sub :filter-active
+  (fn [db [_ tag]]
+    (println :filter-act-sub-sees (:filter-active db))
+    (get-in db [:filter-active tag])))
 
 (declare mk-job-selects)
 
