@@ -63,7 +63,6 @@
 (defn mk-page-loader []
   (fn [hn-id pg-no]
     (let [src-url (pp/cl-format nil "files/~a/~a.html" hn-id (or pg-no hn-id))]
-      (println :mkpg hn-id pg-no src-url)
       [:iframe {:src     src-url
                 :on-load #(let [ifr (.-target %)]
                             ;;(println "Loaded!!" ifr hn-id pg-no src-url)

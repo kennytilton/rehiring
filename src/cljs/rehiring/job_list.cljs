@@ -4,7 +4,8 @@
             [rehiring.filtering :as flt]
             [rehiring.user-annotations :as unt]
             [goog.string :as gs]
-            [cljs.pprint :as pp]))
+            [cljs.pprint :as pp]
+            [rehiring.utility :as utl]))
 
 (declare job-header job-details)
 
@@ -53,9 +54,8 @@
 
 (defn job-details []
   (fn [job]
-    (let [deets-raw @(rfr/subscribe [:show-job-details (:hn-id job)])
-          deets (if (nil? deets-raw) true deets-raw)]
-      ;;(println :deets (:company job) deets (type (:hn-id job)))
+    (let [deets @(rfr/subscribe [:show-job-details (:hn-id job)])]
+
       [:div {:class (if deets "slideIn" "slideOut")
              :style {:margin     "6px"
                      :background "#fff"
@@ -65,12 +65,12 @@
                                 :overflow "auto"}
               :on-double-click #(jump-to-hn (:hn-id job))}
         (when (and (not @(rfr/subscribe [:job-collapse-all]))
-                   @(rfr/subscribe [:show-job-details (:hn-id job)]))
+                   deets)
           (map (fn [x node]
                  (case (.-nodeType node)
                    1 ^{:key (str (:hn-id job) "-p-" x)} [:p (.-innerHTML node)]
                    3 ^{:key (str (:hn-id job) "-p-" x)} [:p (.-textContent node)]
-                   ^{:key (str (:hn-id job) "-p-" x)}
+                   ^{:key (str (:hn-id job) "-p-" x)} ;; todo try just x
                    [:p (str "Unexpected node type = " (.-nodeType node))]))
             (range)
             (:body job)))]])))
@@ -84,7 +84,7 @@
                      :max-height   "16px"
                      :margin-right "9px"
                      :display      "block"}}
-      (gs/unescapeEntities "&#x2b51")]
+      (utl/unesc "&#x2b51")]
      [:span {
              ;;:on-click #(rfr/dispatch [::evt/toggle-show-job-details (:hn-id job)])
              }

@@ -66,17 +66,19 @@
                                         (rfr/dispatch [:unotes-prop-set (:hn-id job) :stars
                                                        (if (= sn (dec j-stars))
                                                          0 (inc sn))]))}
-                     (gs/unescapeEntities "&#x2605;")]))]))
+                     (utl/unesc "&#x2605;")]))]))
 
 (defn applied [job]
   (fn [job]
     (let [input-id (str "applied?" (:hn-id job))]
       [:div {:style utl/hz-flex-wrap-centered}
-       [:input {:id       input-id
-                :type     "checkbox"
-                :style    {:margin-left "18px"}
-                :checked  @(rfr/subscribe [:unotes-prop (:hn-id job) :applied])
-                :on-click #(rfr/dispatch [:unotes-prop-toggle (:hn-id job) :applied])}]
+       [:input {:id        input-id
+                :type      "checkbox"
+                :style     {:margin-left "18px"}
+                :checked     @(rfr/subscribe [:unotes-prop (:hn-id job) :applied])
+                :on-change #(do ;;(println :applied-change!!!!! (.-value (.-target %)))
+                                (rfr/dispatch [:unotes-prop-toggle (:hn-id job) :applied]))
+                }]
        [:label {:for   input-id
                 :style {:color (if @(rfr/subscribe [:unotes-prop (:hn-id job) :applied])
                                  "red" "black")}}
@@ -90,7 +92,7 @@
                          :font-weight (if excluded? "bolder" "lighter")
                          :margin      "4px 4px 8px 0"}
               :on-click #(rfr/dispatch [:unotes-prop-toggle (:hn-id job) :excluded])}
-       (gs/unescapeEntities "&#x20E0;")])))
+       (utl/unesc "&#x20E0;")])))
 
 (defn note-editor [job]
   (let [set-notes (fn [e]
@@ -112,7 +114,6 @@
 (defn note-toggle [job]
   (fn [job]
     (let [notes (or @(rfr/subscribe [:unotes-prop (:hn-id job) :notes]) "")]
-      (println :bam-notes (:hn-id job) (:company job) notes)
       [:span {:style    {:cursor      "pointer"
                          :margin-left "18px"
                          :color       (if (pos? (count notes)) "red" "black")}

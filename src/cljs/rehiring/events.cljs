@@ -5,8 +5,7 @@
    [rehiring.job-loader :as jbld]))
 
 
-(rfr/reg-event-db
-  ::toggle-show-job-details
+(rfr/reg-event-db ::toggle-show-job-details
   (fn [db [_ job-no]]
     ;(println ::toggle-show-job-details job-no (type job-no))
     ;(println :all-deets (:show-job-details db))

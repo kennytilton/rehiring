@@ -1,4 +1,6 @@
-(ns rehiring.utility)
+(ns rehiring.utility
+  (:require
+    [goog.string :as gs]))
 
 (defn slide-in-anime [ show?]
   (if show? "slideIn" "slideOut"))
@@ -17,3 +19,6 @@
   {:display "flex"
    :flex-wrap "wrap"
    :align-items "bottom"})
+
+(defn unesc [entity]
+  (gs/unescapeEntities entity))

@@ -13,6 +13,7 @@
      :job-collapse-all      false
      :toggle-details-action "expand"
      :job-display-max       3                               ;; todo restore to 42
+     :show-filters true
      :show-job-details      {}                              ;; key is hnId, value t/f; handle default in view
      }))
 
@@ -20,7 +21,6 @@
   [(rfr/inject-cofx :local-store-unotes)]
 
   (fn [{:keys [local-store-unotes]} _]
-    (println :using-note local-store-unotes)
     {:db (assoc (initial-db) :user-notes local-store-unotes)}))
 
 (declare ls-get-wild)

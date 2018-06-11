@@ -27,10 +27,6 @@
    "Graphic design by <a href='https://www.mloboscoart.com'>Michael Lobosco</a>."
    ])
 
-
-
-
-
 (defn main-panel []
   [:div
    [app-banner]
@@ -72,41 +68,3 @@
                             :margin "0 18px 9px 0"}} e])
          (range)
          helpItems)]]]))
-
-;function helpOff( mx, toggleName, tag='anon') {
-;                                               clg('helpoff doing', toggleName, tag)
-;                                               mx.fmUp(toggleName).onOff = false
-;                                               }
-;
-;function helpList ( helpItems, toggleName) {
-;                                            return div( {
-;                                                         class: cF( c=> "help " + slideInRule(c, c.md.fmUp( toggleName).onOff))
-;, style: cF( c=> "display:" + (c.md.fmUp(toggleName).onOff? "block":"none"))
-;                                                                , onclick: mx => helpOff(mx, toggleName, 'outerdiv')
-;                                                         }
-;,div({style: "cursor:pointer;text-align: right;margin-right:18px;"
-;             , onclick: mx => helpOff(mx, toggleName, 'Xchar')}, "X")
-;, ul({ style: "list-style:none; margin-left:0"}
-;, helpItems.map( e=> li({style: "padding:0px;margin: 0 18px 9px 0;"}, e)))
-;
-;                                                        )
-;                                            }
-
-;function appBanner () {
-;                       return div(
-;                                   header(
-;                                           div( {
-;                                                 class: "about"
-;                                                        , onclick: mx=> mx.onOff = !mx.onOff
-;    , title: "Usage hints, and credit where due."
-;    , content: cF( c=> c.md.onOff? "hide" : "Pro tips")
-;                                                 }
-;    , {
-;       name: "appHelpToggle"
-;             , onOff: cI( false)
-;       })
-;    , div( { class: "headermain"}
-;    , span( {class: "askhn"}, "Ask HN:")
-;    , span( {class: "who"}, "Who&rsquo;s Hiring?")))
-;  , helpList(appHelpEntry,"appHelpToggle"))
-;                       }

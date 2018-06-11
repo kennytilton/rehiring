@@ -8,15 +8,16 @@
   (if (empty? jobs)
     []
     (let [remall @(rfr/subscribe [:filter-active-all])]
-
       (filter (fn [j]
                 (let [unotes @(rfr/subscribe [:unotes (:hn-id j)])]
                   (and (or (not (get remall "REMOTE")) (:remote j))
                        (or (not (get remall "ONSITE")) (:onsite j))
                        (or (not (get remall "INTERNS")) (:interns j))
                        (or (not (get remall "VISA")) (:visa j))
-                       (or (not (get remall "excluded")) (:excluded unotes))
-                       )))
+                       (or (not (get remall "Excluded")) (:excluded unotes))
+                       (or (not (get remall "Noted")) (pos? (count (:notes unotes))))
+                       (or (not (get remall "Starred")) (pos? (:stars unotes)))
+                       (or (not (get remall "Applied")) (:applied unotes)))))
         jobs))))
 
 (rfr/reg-sub :filter-active-all
@@ -26,7 +27,6 @@
 
 (rfr/reg-sub :filter-active
   (fn [db [_ tag]]
-    (println :filter-act-sub-sees (:filter-active db))
     (get-in db [:filter-active tag])))
 
 (declare mk-job-selects)
@@ -49,7 +49,7 @@
 
 (defn mk-job-selects [key lbl j-major-selects styling]
   (let [f-style (merge utl/hz-flex-wrap {:margin "8px 0 8px 24px"} styling)]
-    [:div {:style f-style}
+    ^{:key key} [:div {:style f-style}
      (map (fn [xm j-selects]
             ^{:key (str key xm)}
             [:div {:style {:display "flex"
