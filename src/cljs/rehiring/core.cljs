@@ -2,9 +2,9 @@
   (:require
    [reagent.core :as reagent]
    [re-frame.core :as re-frame]
-   [rehiring.events :as events]
    [rehiring.views :as views]
    [rehiring.config :as config]
+   [rehiring.db :as db]
    ))
 
 
@@ -19,6 +19,6 @@
                   (.getElementById js/document "app")))
 
 (defn ^:export init []
-  (re-frame/dispatch-sync [::events/initialize-db])
+  (re-frame/dispatch-sync [::db/initialize-db])
   (dev-setup)
   (mount-root))

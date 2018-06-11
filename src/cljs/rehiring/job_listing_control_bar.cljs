@@ -6,7 +6,7 @@
 
 (defn job-listing-control-bar []
   (fn []
-    (println :rebuilding-job-listing-control-bar)
+
     [:div {:class "listingControlBar"}
      ;;; --- match count---------------------------------------------------
      [:div {:style utl/hz-flex-wrap-centered}

@@ -18,7 +18,7 @@
     (let [excluded @(rfr/subscribe [:unotes-prop (:hn-id job) :excluded])
           display (if (and excluded (not @(rfr/subscribe [:filter-active "Excluded"])))
                     "none" "block")]
-      (println (:company job) (:hn-id job) excluded display)
+      ;;(println (:company job) (:hn-id job) excluded display)
       [:li {:style {:cursor     "pointer"
                     :display    display
                     :padding    "12px"

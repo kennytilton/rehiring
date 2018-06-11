@@ -4,12 +4,6 @@
    [rehiring.db :as db]
    [rehiring.job-loader :as jbld]))
 
-(rfr/reg-event-db
- ::initialize-db
- (fn [_ _]
-   (db/initial-db)))
-
-
 
 (rfr/reg-event-db
   ::toggle-show-job-details

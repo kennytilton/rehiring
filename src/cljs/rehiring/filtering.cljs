@@ -11,7 +11,6 @@
 
       (filter (fn [j]
                 (let [unotes @(rfr/subscribe [:unotes (:hn-id j)])]
-                  (println :filtsee-unote unotes)
                   (and (or (not (get remall "REMOTE")) (:remote j))
                        (or (not (get remall "ONSITE")) (:onsite j))
                        (or (not (get remall "INTERNS")) (:interns j))
@@ -66,7 +65,6 @@
                               :class     (str tag "-jSelect")
                               :style     {:background "#eee"}
                               :type      "checkbox"
-                              ;;#(rfr/dispatch [::evt/toggle-show-job-details (:hn-id job)])
                               :on-change (fn [e]
                                            (println :bamchg
                                              (.-checked (.-target e)))

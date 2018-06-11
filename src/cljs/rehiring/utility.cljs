@@ -6,6 +6,8 @@
 (def hz-flex-wrap {:display "flex"
                    :flex-wrap "wrap"})
 
+(def ls-key "rehiring-browser")                         ;; localstore key
+
 (def hz-flex-wrap-centered
   {:display "flex"
    :flex-wrap "wrap"
