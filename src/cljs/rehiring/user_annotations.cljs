@@ -10,8 +10,10 @@
 
 (defn db-unotes-ensure [db hn-id]
   (if (contains? (:user-notes db) hn-id)
-    db (assoc-in db [:user-notes hn-id] {:hn-id hn-id
-                                         :stars 0})))
+    db (assoc-in db [:user-notes hn-id] {:hn-id        hn-id
+                                         :stars        0
+                                         :notes        ""
+                                         :note-editing false})))
 
 (defn unote->local-storage
   [unote]
@@ -56,23 +58,15 @@
     [:div {:style utl/hz-flex-wrap-bottom}
      (let [j-stars (or @(rfr/subscribe [:unotes-prop (:hn-id job) :stars]) 0)]
        (for [sn (range MAX-STARS)]
-         ^{:key sn} [:span {:style {:cursor "pointer"
-                                    :color  (if (>= j-stars (inc sn)) "red" "gray")}
+         ^{:key sn} [:span {:style    {:cursor "pointer"
+                                       :color  (if (>= j-stars (inc sn)) "red" "gray")}
                             :on-click (fn [e]
-                                         (println :bamchg-stars
-                                           sn (.-checked (.-target e)))
-                                         (rfr/dispatch [:unotes-prop-set (:hn-id job) :stars
-                                                        (if (= sn (dec j-stars))
-                                                          0 (inc sn))]))}
+                                        (println :bamchg-stars
+                                          sn (.-checked (.-target e)))
+                                        (rfr/dispatch [:unotes-prop-set (:hn-id job) :stars
+                                                       (if (= sn (dec j-stars))
+                                                         0 (inc sn))]))}
                      (gs/unescapeEntities "&#x2605;")]))]))
-
-(defn note-toggle []
-  (fn []
-    [:p "note-toggle"]))
-
-(defn note-editor []
-  (fn []
-    [:p "note-editor"]))
 
 (defn applied [job]
   (fn [job]
@@ -98,15 +92,45 @@
               :on-click #(rfr/dispatch [:unotes-prop-toggle (:hn-id job) :excluded])}
        (gs/unescapeEntities "&#x20E0;")])))
 
+(defn note-editor [job]
+  (let [set-notes (fn [e]
+                    (rfr/dispatch [:unotes-prop-set (:hn-id job) :notes (.-value (.-target e))]))]
+    (fn [job]
+      [:textarea {:style        {:padding "8px"
+                                 :margin  "0 12px 0 12px"
+                                 :cols    20
+                                 :display (if @(rfr/subscribe [:unotes-prop (:hn-id job) :note-editing])
+                                            "flex" "none")}
+                  :placeholder  "Your notes here"
+
+                  :on-key-press #(when (= "Enter" (js->clj (.-key %)))
+                                   (set-notes %))
+
+                  :on-blur      set-notes
+                  :defaultValue (or @(rfr/subscribe [:unotes-prop (:hn-id job) :notes]) "")}])))
+
+(defn note-toggle [job]
+  (fn [job]
+    (let [notes (or @(rfr/subscribe [:unotes-prop (:hn-id job) :notes]) "")]
+      (println :bam-notes (:hn-id job) (:company job) notes)
+      [:span {:style    {:cursor      "pointer"
+                         :margin-left "18px"
+                         :color       (if (pos? (count notes)) "red" "black")}
+              :title    "Show/hide editor for your own notes"
+              :on-click #(rfr/dispatch [:unotes-prop-toggle (:hn-id job) :note-editing])}
+       "Notes"])))
+
 ;;; --- main ------------------------------------------------------
 
 
 (defn user-annotations []
   (fn [job]
-    [:div {:class "userAnnotations"}
-     [job-stars job]
-     [applied job]
-     [note-toggle]
-     [exclude-job job]
+    [:div {:style {:display        "flex"
+                   :flex-direction "column"}}
+     [:div {:class "userAnnotations"}
+      [job-stars job]
+      [applied job]
+      [note-toggle job]
+      [exclude-job job]]
      [note-editor job]]))
 
