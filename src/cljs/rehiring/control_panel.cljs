@@ -18,15 +18,16 @@
 
 (defn toggle-char [db-key title on-char off-char attrs style]
   (fn []
-    [:span (merge {:style    (merge {:font-weight "bold"
-                                     :cursor      "pointer"
-                                     :margin-left "9px"
-                                     :font-family "Arial"
-                                     :font-size   "1em"} style)
-                   :title    title
-                   :on-click #(rfr/dispatch [:toggle-key db-key])}
-             attrs)
-     (utl/unesc (if @(rfr/subscribe db-key) "X" "Y"))]))
+    (let [on-off @(rfr/subscribe [db-key])]
+      [:span (merge {:style    (merge {:font-weight "bold"
+                                       :cursor      "pointer"
+                                       :margin-left "9px"
+                                       :font-family "Arial"
+                                       :font-size   "1em"} style)
+                     :title    title
+                     :on-click #(rfr/dispatch [:toggle-key db-key])}
+               attrs)
+       (utl/unesc (if on-off on-char off-char))])))
 
 (rfr/reg-sub :show-filters
   (fn [db]
@@ -47,18 +48,17 @@
 
      [:div {:class "osBody"
             :style {:background "#ff6600"
-                    :display    "block"}}
+                    :display    (if @(rfr/subscribe [toggle-db-key]) "block" "none")}}
       (for [case cases]
-        ^{:key (rand-int 100000)}(case))]]))
+        ^{:key (rand-int 100000)} (case))]]))
 
 (defn control-panel []
   (fn []
     [:div {:style {:background "#ffb57d"}}
-     #_[open-shut-case :show-filters "Filters"
+     [open-shut-case :show-filters "Filters"
       flt/mk-title-selects
       flt/mk-user-selects]
-     [flt/mk-title-selects]
-     [flt/mk-user-selects]
+
      [jlcb/job-listing-control-bar]]))
 
 
