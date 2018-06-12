@@ -54,52 +54,34 @@
 
 ;;; --- sort bar -----------------------------------------------------------
 
-(defn job-company-key [j]
-  (or (:company j) ""))
-
-(defn job-stars-compare [dir j k]
-  ;; force un-starred to end regardless of sort order
-  ;; order ties by ascending hn-id
-  (let [j-stars @(rfr/subscribe [:unotes-prop (:hn-id j) :stars])
-        k-stars @(rfr/subscribe [:unotes-prop (:hn-id k) :stars])]
-    (if (pos? j-stars)
-      (if (pos? k-stars)
-        (* dir (if (< j-stars k-stars)
-                 -1
-                 (if (> j-stars k-stars)
-                   1
-                   (if (< (:hn-d j) (:hn-id k)) -1 1))))
-        -1)
-      (if (pos? k-stars)
-        1
-        (if (< (:hn-d j) (:hn-id k)) -1 1)))))
-
 (defn sort-bar []
   (fn []
     [:div {:style {:padding 0
                    :margin  "15px 0 0 24px"
                    :display "flex"}}
-     [:span "Sort"]
+     [:span {:style {:margin-right "6px"}} "Sort by:"]
      [:ul {:style (merge utl/hz-flex-wrap
                     {:list-style "none"
-                     :padding 0 :margin 0})}
-      (into [] (map (fn [jsort]
-             (println :js jsort)
-             [:li (:title jsort)]
-             #_
-                 (let [{:keys [title]} jsort]
-                   ;; ^{:key title}
-                   [:button.sortOption
-                    {:style    {:color (if (= title (:title curr-sort))
-                                         "blue" "#222")}
-                     :selected (= jsort curr-sort)
-                     :on-click #(if (= title (:title curr-sort))
-                                  (rfr/dispatch [:job-sort-set (update curr-sort :sort-dir not)])
-                                  (rfr/dispatch [:job-sort-set jsort]))}
-                    (str (:title jsort) (if (= title (:title curr-sort))
-                                          (if (= (:order curr-sort) -1) " &#x2798" " &#x279a")))]))
+                     :padding    0 :margin 0})}
+      (let [curr-sort @(rfr/subscribe [:job-sort])]
+        (map (fn [jsort]
+             (let [{:keys [title]} jsort]
+               ^{:key title}
+               [:li
+                [:button.sortOption
+                 {:style    {:color (if (= title (:title curr-sort))
+                                      "blue" "#222")}
+                  :selected (= jsort curr-sort)
+                  :on-click #(if (= title (:title curr-sort))
+                               (rfr/dispatch [:job-sort-set (update curr-sort :order (fn [oo]
+                                                                                       (println :oo oo)
+                                                                                       (* -1 oo)))])
+                               (rfr/dispatch [:job-sort-set jsort]))}
+                 (str (:title jsort) (if (= title (:title curr-sort))
+                                       (if (= (:order curr-sort) -1)
+                                         (utl/unesc "&#x2798") (utl/unesc "&#x279a"))))]]))
         utl/job-sorts))
-      [:li "one"][:li "two"]]]))
+      ]]))
 
 (defn control-panel []
   (fn []

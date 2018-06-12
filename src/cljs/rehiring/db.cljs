@@ -13,6 +13,7 @@
      :job-collapse-all      false
      :toggle-details-action "expand"
      :job-display-max       3                               ;; todo restore to 42
+     :job-sort (nth utl/job-sorts 0)
      :show-filters true
      :show-job-details      {}                              ;; key is hnId, value t/f; handle default in view
      }))
@@ -57,11 +58,3 @@
           (conj found (first keys))
           found))
       found)))
-
-;;; read in todos from localstore, and process into a sorted map
-;(into (sorted-map)
-;  (some->> (.getItem js/localStorage ls-key)
-;    (cljs.reader/read-string)    ;; EDN map -> map
-;    )))))
-
-
