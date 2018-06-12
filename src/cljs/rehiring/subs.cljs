@@ -10,6 +10,23 @@
   (fn [db]
     (:jobs db)))
 
+;(reg-sub
+;  :filtered-jobs
+;
+;  ;; Signal Function
+;  ;; Tells us what inputs flow into this node.
+;  ;; Returns a vector of two input signals (in this case)
+;  (fn [query-v _]
+;    [(subscribe [:todos])
+;     (subscribe [:showing])])
+;
+;  ;; Computation Function
+;  (fn [[todos showing] _]   ;; that 1st parameter is a 2-vector of values
+;    (let [filter-fn (case showing
+;                      :active (complement :done)
+;                      :done   :done
+;                      :all    identity)]
+;      (filter filter-fn todos))))
 
 (rfr/reg-sub :show-job-details
   (fn [db [_ hn-id]]

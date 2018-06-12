@@ -81,6 +81,5 @@
 (rfr/reg-event-db
   :filter-activate
   (fn [db [_ tag active?]]
-    (println :bamevt tag active? :now (get-in db [:filter-active tag]))
     (assoc-in db [:filter-active tag] active?)))
 
