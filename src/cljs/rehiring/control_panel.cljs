@@ -83,6 +83,16 @@
         utl/job-sorts))
       ]]))
 
+(rfr/reg-sub :job-sort
+  (fn [db]
+    (:job-sort db)))
+
+(rfr/reg-event-db :job-sort-set
+  (fn [db [_ new-sort]]
+    (assoc db :job-sort new-sort)))
+
+;;; --- the beef -----------------------------------------------------
+
 (defn control-panel []
   (fn []
     [:div {:style {:background "#ffb57d"}}
@@ -92,17 +102,3 @@
      [sort-bar]
 
      [jlcb/job-listing-control-bar]]))
-
-
-
-;function openShutCase( name, title, initOpen, echo, ...cases) {
-;                                                               let toggleName = name+"-toggle";
-;                                                                   return div(
-;                                                                               div({class: "selector"}
-;  , span( title)
-;  , toggleChar( toggleName, "Show/hide "+title, initOpen, "&#x25be", "&#x25b8")
-;  , echo)
-;  , div( { class: cF( c=> "osBody " + slideInRule(c, c.md.fmUp(toggleName).onOff))
-;  , style: cF( c=> "background:#ff6600;display:" + (c.md.fmUp(toggleName).onOff? "block":"none"))}
-;  , cases.map( c=> c())))
-;                                                               }

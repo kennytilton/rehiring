@@ -10,13 +10,6 @@
   (fn [db]
     (:jobs db)))
 
-(rfr/reg-sub :job-sort
-  (fn [db]
-    (:job-sort db)))
-
-(rfr/reg-event-db :job-sort-set
-  (fn [db [_ new-sort]]
-    (assoc db :job-sort new-sort)))
 
 (rfr/reg-sub :show-job-details
   (fn [db [_ hn-id]]

@@ -76,9 +76,9 @@
       (let [things (take 100 (prim-seq (.querySelectorAll hn-body ".athing")))]
         (println :things (count things))
         (let [jobs (filter #(:OK %) (map job-spec things))]
-          (set! (.-innerHTML hn-body) (str (take 2 jobs)))
+          (set! (.-innerHTML hn-body) "")
           ;;(println :j3 (take 10 jobs))
-          jobs)))
+          (take 10 jobs))))
     []))
 
 (defn job-spec [dom]

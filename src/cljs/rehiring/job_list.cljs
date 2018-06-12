@@ -9,7 +9,14 @@
 
 (declare job-header job-details)
 
-(defn job-list-sort [jobs] jobs)
+(defn job-list-sort [jobs]
+  (let [{:keys [key-fn comp-fn order prep-fn]} @(rfr/subscribe [:job-sort])]
+    (println :sorting! key-fn comp-fn order)
+    (sort (fn [j k]
+            (if comp-fn
+              (comp-fn order j k)
+              (* order (if (< (key-fn j) (key-fn k)) -1 1))))
+      (map (or prep-fn identity) jobs))))
 
 (defn jump-to-hn [hn-id]
   (.open js/window (pp/cl-format nil "https://news.ycombinator.com/item?id=~a" hn-id) "_blank"))

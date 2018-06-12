@@ -12,7 +12,7 @@
      :month-hn-id           (:hnId (nth months SEARCH-MO-STARTING-IDX))
      :job-collapse-all      false
      :toggle-details-action "expand"
-     :job-display-max       3                               ;; todo restore to 42
+     :job-display-max       42                           ;; todo restore to 42
      :job-sort (nth utl/job-sorts 0)
      :show-filters true
      :show-job-details      {}                              ;; key is hnId, value t/f; handle default in view
