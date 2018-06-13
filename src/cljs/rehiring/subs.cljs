@@ -17,5 +17,4 @@
 
 (rfr/reg-sub :toggle-key
   (fn [db [_ db-key]]
-    (println :togg-sub-runs! db-key (get db db-key))
     (get db db-key)))

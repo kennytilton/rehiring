@@ -42,7 +42,7 @@
                                     (or (not (get filters "Excluded")) (:excluded unotes))
                                     (or (not (get filters "Noted")) (pos? (count (:notes unotes))))
                                     (or (not (get filters "Applied")) (:applied unotes))
-                                    ;;(or (not title-rgx-tree) (rgx-tree-match (:title-search j) title-rgx-tree))
+                                    (or (not title-rgx-tree) (rgx-tree-match (:title-search j) title-rgx-tree))
                                     ;;(or (not full-rgx-tree) (rgx-tree-match (:body-search j) full-rgx-tree))
                                     )))
                      jobs)))

@@ -163,20 +163,30 @@
   (fn [signals]
     (println :sigs signals)
     (let [[rgx-normal match-case] signals]
-      (println :rgx-normal rgx-normal match-case)
+      (println :rgx-normal rgx-normal (type rgx-normal) (type (js->clj rgx-normal)))
       (when rgx-normal
-        (map (fn [or-term]
-               (println :or-term or-term)
-               (map (fn [and-term]
-                      (println :and-term and-term)
-                      (let [[term options] (str/split (str/trim and-term) ",")]
-                        (println :newrgx and-term term options)
-                        (let [rgx (js/RegExp. term (if (and (not match-case)
-                                                            (not (str/includes? options ",")))
-                                                     (str options "i")))]
-                          (println :truergx rgx))))
-                 (str/split or-term #"&&")))
-          (str/split rgx-normal #"\|\|"))))))
+        (let [or-terms (str/split (js->clj rgx-normal) #"\|\|")]
+          (println :or-terms or-terms (count or-terms))
+          (into []
+            (map (fn [or-term]
+                   (println :or-term or-term)
+                   (into []
+                     (map (fn [and-term]
+                            (println :and-term and-term)
+                            (let [[term options] (str/split (str/trim and-term) ",")
+                                  netopts (if (and (not match-case)
+                                                   (not (str/includes? (or options "") "i")))
+                                            (str options "i"))]
+                              (println :newrgx and-term term netopts options)
+                              (try
+                                (let [rgx (js/RegExp. term netopts)]
+                                  (println :truergx!!!! rgx)
+                                  rgx)
+                                (catch js/Object ex
+                                  (println :caught-regex-exception)
+                                  nil))))
+                       (str/split or-term #"&&"))))
+              or-terms)))))))
 
 
 (rfr/reg-sub :search-history
