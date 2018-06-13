@@ -13,15 +13,25 @@
   (fn [db [_ tag]]
     (get-in db [:filter-active tag])))
 
+(defn rgx-tree-match [text tree]
+  (println :rgxtreematch (subs text 0 20) tree)
+  (some (fn [ands]
+          (every? (fn [and]
+                   (boolean (re-find and text))))) tree))
+
 (rfr/reg-sub :jobs-filtered
                  ;; signal fn
                  (fn [query-v _]
                    [(subscribe [:jobs])
                     (subscribe [:user-notes])
-                    (subscribe [:filter-active-all])])
+                    (subscribe [:filter-active-all])
+                    ;(subscribe [:rgx-tree :title])
+                    ;(subscribe [:rgx-tree :full])
+                    ])
 
                  ;; compute
-                 (fn [[jobs user-notes filters]]
+                 (fn [[jobs user-notes filters]] ;;  title-rgx-tree full-rgx-tree]]
+                   ;;(println :filtering title-rgx-tree full-rgx-tree)
                    (filter (fn [j]
                              (let [unotes (get user-notes (:hn-id j))]
                                (and (or (not (get filters "REMOTE")) (:remote j))
@@ -30,8 +40,10 @@
                                     (or (not (get filters "VISA")) (:visa j))
                                     (or (not (get filters "Excluded")) (:excluded unotes))
                                     (or (not (get filters "Noted")) (pos? (count (:notes unotes))))
-                                    (or (not (get filters "Starred")) (pos? (:stars unotes)))
-                                    (or (not (get filters "Applied")) (:applied unotes)))))
+                                    (or (not (get filters "Applied")) (:applied unotes))
+                                    ;;(or (not title-rgx-tree) (rgx-tree-match (:title-search j) title-rgx-tree))
+                                    ;;(or (not full-rgx-tree) (rgx-tree-match (:body-search j) full-rgx-tree))
+                                    )))
                      jobs)))
 
 (rfr/reg-sub :jobs-filtered-excluded

@@ -42,12 +42,6 @@
     ;(println :bam-prop id prop (get unotes prop) unotes)
     (get unotes prop)))
 
-;(rfr/reg-sub :unotes-prop
-;  (fn [db [_ hn-id property]]
-;    (when (nil? hn-id)
-;      (println :oops hn-id property))
-;    (get-in db [:user-notes hn-id property])))
-
 (rfr/reg-event-fx :unotes-prop-toggle
   (fn [{:keys [db]} [_ hn-id property]]
     (let [new-db (update-in (db-unotes-ensure db hn-id)

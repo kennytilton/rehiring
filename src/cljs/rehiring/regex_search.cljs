@@ -1,8 +1,9 @@
 (ns rehiring.regex-search
   (:require [cljs.pprint :as pp]
-            [re-frame.core :as rfr]
+            [re-frame.core :refer [subscribe] :as rfr]
             [rehiring.utility :as utl]
-            [reagent.core :as rgt]))
+            [reagent.core :as rgt]
+            [clojure.string :as str]))
 
 
 
@@ -43,12 +44,8 @@
 
 (def regexHelpEntry
   (map identity
-    ["Press <kbd style='background:cornsilk;font-size:1em'>Enter</kbd> or <kbd style='background:cornsilk;font-size:1em'>Tab</kbd> to activate, including after clearing."
-     , (str "Separate <a href='https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions'>JS RegExp-legal</a> terms with <b>||</b> or "
-     "<b>&&</b> (higher priority) to combine expressions.")
-     , "'Allow or/and' option treats those as ||/&& for easier mobile entry."
-    , "Regex terms are split on comma and passed to <b>new RegExp(pattern,flags)</b>."
-    , "e.g. Enter <b>taipei,i</b> for case-insensitive search."]))
+    ["Press <kbd style='background:cornsilk;font-size:1em'>Enter</kbd> or <kbd style='background:cornsilk;font-size:1em'>Tab</kbd> to activate, including after clearing.", (str "Separate <a href='https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions'>JS RegExp-legal</a> terms with <b>||</b> or "
+                                                                                                                                                                              "<b>&&</b> (higher priority) to combine expressions."), "'Allow or/and' option treats those as ||/&& for easier mobile entry.", "Regex terms are split on comma and passed to <b>new RegExp(pattern,flags)</b>.", "e.g. Enter <b>taipei,i</b> for case-insensitive search."]))
 
 (defn mk-rgx-options []
   (let [helping (rgt/atom false)]
@@ -60,14 +57,54 @@
                         :margin        "4px 0 9px 30px"})}
         ^{:key "mcase"} [mk-rgx-match-case]
         ^{:key "andor"} [mk-rgx-or-and]
-        ^{:key "help"} [:span {:style {:color "white" :margin-left "24px"
-                               :cursor "pointer"}
+        ^{:key "help"} [:span {:style    {:color  "white" :margin-left "24px"
+                                          :cursor "pointer"}
                                :on-click #(reset! helping (not @helping))}
                         "help"]
         ]
        [utl/help-list regexHelpEntry helping]])))
 
 (defn happy? [])
+
+;function rebuildRgxTree( mx) {
+;
+;      let matchCase = mx.fmUp("rgxMatchCase").value
+;, cvtOrAnd = mx.fmUp("rgxOrAnd").value
+;, search =  cvtOrAnd? mx.rgxRaw.replace(/\sor\s/," || ").replace(/\sand\s/," && ") : mx.rgxRaw;
+;
+;      clg("building from search str", search);
+;
+;
+;  mx.rgxTree = search.split('||').map(orx => orx.trim().split('&&').map(andx => {
+;           try {
+;                let [term, options=''] = andx.trim().split(',')
+;                                                            if ( !matchCase && options.search('i') === -1)
+;                                                            options = options + 'i'
+;                                                            return new RegExp( term, options)
+;                }
+;           catch (error) {
+;                          alert(error.toString() + ": <" + andx.trim() + ">")
+;                          }
+;           }))
+;}
+
+
+
+
+
+;function buildRgxTree(mx, e) {
+;mx.rgxRaw = e.target.value.trim()
+;
+;if (mx.rgxRaw === '') {
+;           mx.rgxTree = null // test
+;           } else {
+;                   if (mx.history.indexOf( mx.rgxRaw) === -1) {
+;                                                               //clg('adding to rgx!!!!', mx.rgxRaw)
+;                                                               mx.history = mx.history.concat(mx.rgxRaw)
+;                                                               }
+;                      rebuildRgxTree(mx)
+;                   }
+;}
 
 (defn mk-listing-rgx [prop label desc]
   [:div {:style {:display        "flex"
@@ -78,10 +115,13 @@
     label]
    [:input {:placeholder (pp/cl-format nil "Regex for ~a search" desc)
             :list        (str prop "list")
-            ;;:on-blur #(build-rgx-tree)
+            :on-blur     #(let [rgx-raw (str/trim (.-value (.-target %)))]
+                            (println :rgx!!!!!!!! prop rgx-raw)
+                            (rfr/dispatch [:rgx-unparsed-set prop rgx-raw]))
             ;; todo on keypress
             :on-focus    #(.setSelectionRange (.-target %) 0 999)
-            :value       "taipei"
+            :value       (when (= prop :title)
+                           "Crowd")
             :on-change   #(happy?)
             :style       {:min-width "72px"
                           :font-size "1em"
@@ -90,6 +130,54 @@
     (map (fn [hs]
            [:option {:value hs}])
       @(rfr/subscribe [:search-history prop]))]])
+
+(rfr/reg-event-db :rgx-unparsed-set
+  (fn [db [_ scope raw]]
+    (assoc-in db [:rgx-raw scope] raw)))
+
+(rfr/reg-sub :rgx-raw
+  (fn [db [_ scope]]
+    (get-in db [:rgx-raw scope])))
+
+(rfr/reg-sub :rgx-de-aliased
+  ;; signal fn
+  (fn [[_ scope] _]
+    [(rfr/subscribe [:rgx-raw scope])
+     (rfr/subscribe [:toggle-key :rgx-xlate-or-and])])
+
+  ;; compute
+  (fn [[rgx-raw xlate-or-and]]
+    (println :de-alias-compute!! rgx-raw xlate-or-and)
+    (when rgx-raw
+      (if xlate-or-and
+        (str/replace (str/replace rgx-raw #"\sand\s" " && ") #"\sor\s" " || ")
+        rgx-raw))))
+
+(rfr/reg-sub :rgx-tree
+  ;; signal fn
+  (fn [[_ scope] _]
+    [(rfr/subscribe [:rgx-de-aliased scope])
+     (rfr/subscribe [:toggle-key :rgx-match-case])])
+
+  ;; compute
+  (fn [signals]
+    (println :sigs signals)
+    (let [[rgx-normal match-case] signals]
+      (println :rgx-normal rgx-normal match-case)
+      (when rgx-normal
+        (map (fn [or-term]
+               (println :or-term or-term)
+               (map (fn [and-term]
+                      (println :and-term and-term)
+                      (let [[term options] (str/split (str/trim and-term) ",")]
+                        (println :newrgx and-term term options)
+                        (let [rgx (js/RegExp. term (if (and (not match-case)
+                                                            (not (str/includes? options ",")))
+                                                     (str options "i")))]
+                          (println :truergx rgx))))
+                 (str/split or-term #"&&")))
+          (str/split rgx-normal #"\|\|"))))))
+
 
 (rfr/reg-sub :search-history
   (fn [db [_ prop]]
@@ -102,21 +190,21 @@
 
 (defn mk-title-rgx []
   ^{:key "title"}
-  [mk-listing-rgx "title" "Title Only?" "title"])
+  [mk-listing-rgx :title "Title Only?" "title"])
 
 (defn mk-full-rgx []
   ^{:key "full"}
-  [mk-listing-rgx "listing" "Full Listing" "title and listing"])
+  [mk-listing-rgx :full "Full Listing" "title and listing"])
 
 
 (defn mk-regex-search []
   (fn []
     [:div
-         [:span {:style {:margin-left "24px"}}
-          "Search"]
+     [:span {:style {:margin-left "24px"}}
+      "Search"]
 
-         [:div {:class "osBody"
-                :style {:background "#ff6600"}}
-          [mk-title-rgx]
-          [mk-full-rgx]
-          [mk-rgx-options]]]))
+     [:div {:class "osBody"
+            :style {:background "#ff6600"}}
+      [mk-title-rgx]
+      [mk-full-rgx]
+      [mk-rgx-options]]]))
