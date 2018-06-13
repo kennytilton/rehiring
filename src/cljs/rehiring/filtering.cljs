@@ -4,22 +4,6 @@
             [re-frame.core :refer [subscribe reg-sub] :as rfr]
             [re-frame.core :as re-frame]))
 
-(defn job-list-filter [jobs]
-  (if (empty? jobs)
-    []
-    (let [remall @(rfr/subscribe [:filter-active-all])]
-      (filter (fn [j]
-                (let [unotes @(rfr/subscribe [:unotes (:hn-id j)])]
-                  (and (or (not (get remall "REMOTE")) (:remote j))
-                       (or (not (get remall "ONSITE")) (:onsite j))
-                       (or (not (get remall "INTERNS")) (:interns j))
-                       (or (not (get remall "VISA")) (:visa j))
-                       (or (not (get remall "Excluded")) (:excluded unotes))
-                       (or (not (get remall "Noted")) (pos? (count (:notes unotes))))
-                       (or (not (get remall "Starred")) (pos? (:stars unotes)))
-                       (or (not (get remall "Applied")) (:applied unotes)))))
-        jobs))))
-
 (rfr/reg-sub :filter-active-all
   (fn [db [_]]
     ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
@@ -30,44 +14,41 @@
     (get-in db [:filter-active tag])))
 
 (rfr/reg-sub :jobs-filtered
+                 ;; signal fn
+                 (fn [query-v _]
+                   [(subscribe [:jobs])
+                    (subscribe [:user-notes])
+                    (subscribe [:filter-active-all])])
+
+                 ;; compute
+                 (fn [[jobs user-notes filters]]
+                   (filter (fn [j]
+                             (let [unotes (get user-notes (:hn-id j))]
+                               (println :unotes unotes)
+                               (and (or (not (get filters "REMOTE")) (:remote j))
+                                    (or (not (get filters "ONSITE")) (:onsite j))
+                                    (or (not (get filters "INTERNS")) (:interns j))
+                                    (or (not (get filters "VISA")) (:visa j))
+                                    (or (not (get filters "Excluded")) (:excluded unotes))
+                                    (or (not (get filters "Noted")) (pos? (count (:notes unotes))))
+                                    (or (not (get filters "Starred")) (pos? (:stars unotes)))
+                                    (or (not (get filters "Applied")) (:applied unotes)))))
+                     jobs)))
+
+(rfr/reg-sub :jobs-filtered-excluded
+  ;
+  ; return excluded jobs regardless of the "excluded" filter, which *selects* those to be shown
+  ;
   ;; signal fn
   (fn [query-v _]
-    [(subscribe [:jobs])
-     (subscribe [:user-notes])
-     (subscribe [:filter-active-all])])
+    [(subscribe [:jobs-filtered])
+     (subscribe [:user-notes])])
 
   ;; compute
-  (fn [[jobs user-notes filters]]
+  (fn [[jobs-filtered user-notes]]
     (filter (fn [j]
-              (let [unotes (get user-notes (:hn-id j))]
-                (println :unotes unotes)
-                (and (or (not (get filters "REMOTE")) (:remote j))
-                   (or (not (get filters "ONSITE")) (:onsite j))
-                   (or (not (get filters "INTERNS")) (:interns j))
-                   (or (not (get filters "VISA")) (:visa j))
-                   (or (not (get filters "Excluded")) (:excluded unotes))
-                   (or (not (get filters "Noted")) (pos? (count (:notes unotes))))
-                   (or (not (get filters "Starred")) (pos? (:stars unotes)))
-                   (or (not (get filters "Applied")) (:applied unotes)))))
-      jobs)))
-
-;(reg-sub
-;  :filtered-jobs
-;
-;  ;; Signal Function
-;  ;; Tells us what inputs flow into this node.
-;  ;; Returns a vector of two input signals (in this case)
-;  (fn [query-v _]
-;    [(subscribe [:todos])
-;     (subscribe [:showing])])
-;
-;  ;; Computation Function
-;  (fn [[todos showing] _]   ;; that 1st parameter is a 2-vector of values
-;    (let [filter-fn (case showing
-;                      :active (complement :done)
-;                      :done   :done
-;                      :all    identity)]
-;      (filter filter-fn todos))))
+              (get-in user-notes [(:hn-id j) :excluded]))
+      jobs-filtered)))
 
 (declare mk-job-selects)
 
@@ -120,4 +101,14 @@
   :filter-activate
   (fn [db [_ tag active?]]
     (assoc-in db [:filter-active tag] active?)))
+
+(rfr/reg-event-db
+  :show-filtered-excluded-toggle
+  (fn [db [_ active?]]
+    (update db :show-filtered-excluded not)))
+
+(rfr/reg-sub
+  :show-filtered-excluded
+  (fn [db]
+    (:show-filtered-excluded db)))
 

@@ -24,7 +24,7 @@
 (defn job-list-item []
   (fn [job-no job]
     (let [excluded @(rfr/subscribe [:unotes-prop (:hn-id job) :excluded])
-          display (if (and excluded (not @(rfr/subscribe [:filter-active "Excluded"])))
+          display (if (and excluded (not @(rfr/subscribe [:show-filtered-excluded])))
                     "none" "block")]
       ;;(println (:company job) (:hn-id job) excluded display)
       [:li {:style {:cursor     "pointer"

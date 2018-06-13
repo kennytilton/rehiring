@@ -6,17 +6,30 @@
 
 (defn job-listing-control-bar []
   (fn []
+    (let [excluded @(rfr/subscribe [:jobs-filtered-excluded])]
+      [:div {:class "listingControlBar"}
+       ;;; --- match count---------------------------------------------------
+       [:div {:style utl/hz-flex-wrap-centered}
+        [:span {:style {:font-size    "1em"
+                        :margin-right "12px"}}
+         (let [jobs @(rfr/subscribe [:jobs])]
+           (str "Jobs: " (count jobs)))]
 
-    [:div {:class "listingControlBar"}
-     ;;; --- match count---------------------------------------------------
-     [:div {:style utl/hz-flex-wrap-centered}
-      [:span {:style {:font-size    "1em"
-                      :margin-right "12px"}}
-       (let [jobs @(rfr/subscribe [:jobs])]
-         (str "Jobs: " (count jobs)))]]
+        [:span {:style    {:padding-bottom "4px"
+                           :cursor         "pointer"
+                           :display        "flex"
+                           :align-items    "center"
+                           :font-size      "1em"
+                           :visibility     (if (pos? (count excluded)) "visible" "hidden")
+                           :border         (if @(rfr/subscribe [:show-filtered-excluded])
+                                             "thin solid red" "none")
+                           :title          "Show/hide items you have excluded"}
+                :on-click #(rfr/dispatch [:show-filtered-excluded-toggle])
+                }
+         (str (utl/unesc "&#x20E0;") ": " (count excluded))]]
 
-     [result-max]
-     [jobs-all-expansion]]))
+       [result-max]
+       [jobs-all-expansion]])))
 
 ;;; --- display limit ------------------------------------------------
 
@@ -28,7 +41,7 @@
        [:input {:type         "number"
                 :defaultValue rmax
 
-                :on-key-press #(when (= "Enter"  (js->clj (.-key %)))
+                :on-key-press #(when (= "Enter" (js->clj (.-key %)))
                                  (rfr/dispatch [:set-result-display-max (js/parseInt (.-value (.-target %)))]))
 
                 :on-blur      #(let [new (.-value (.-target %))]

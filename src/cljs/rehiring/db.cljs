@@ -15,6 +15,7 @@
      :job-display-max       42                           ;; todo restore to 42
      :job-sort (nth utl/job-sorts 0)
      :show-filters true
+     :show-filtered-excluded false
      :show-job-details      {}                              ;; key is hnId, value t/f; handle default in view
      }))
 
