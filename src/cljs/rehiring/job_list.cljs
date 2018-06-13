@@ -24,7 +24,9 @@
   (fn [job-no job]
       [:li {:style {:cursor     "pointer"
                     :display    (let [excluded @(rfr/subscribe [:unotes-prop (:hn-id job) :excluded])]
-                                  (if (and excluded (not @(rfr/subscribe [:show-filtered-excluded])))
+                                  (if (and excluded
+                                           (not @(rfr/subscribe [:show-filtered-excluded]))
+                                           (not @(rfr/subscribe [:filter-active "Excluded"])))
                                     "none" "block"))
                     :padding    "12px"
                     :background (if (zero? (mod job-no 2))

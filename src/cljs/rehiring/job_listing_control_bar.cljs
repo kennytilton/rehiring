@@ -21,7 +21,7 @@
                            :align-items    "center"
                            :font-size      "1em"
                            :visibility     (if (pos? (count excluded)) "visible" "hidden")
-                           :border         "blue" #_(if @(rfr/subscribe [:show-filtered-excluded])
+                           :border         (if @(rfr/subscribe [:show-filtered-excluded])
                                                       "thin solid red" "none")
                            :title          "Show/hide items you have excluded"}
                 :on-click #(rfr/dispatch [:show-filtered-excluded-toggle])
