@@ -23,6 +23,10 @@
 
 ;;; --- re-frame-ese ---------------------------------
 
+(rfr/reg-sub :user-notes
+  (fn [db [_]]
+    (:user-notes db)))
+
 (rfr/reg-sub :unotes
   (fn [db [_ hn-id]]
     (get-in db [:user-notes hn-id])))

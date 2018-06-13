@@ -1,7 +1,7 @@
 (ns rehiring.filtering
   (:require [rehiring.utility :as utl]
             [rehiring.events :as evt]
-            [re-frame.core :as rfr]
+            [re-frame.core :refer [subscribe reg-sub] :as rfr]
             [re-frame.core :as re-frame]))
 
 (defn job-list-filter [jobs]
@@ -28,6 +28,46 @@
 (rfr/reg-sub :filter-active
   (fn [db [_ tag]]
     (get-in db [:filter-active tag])))
+
+(rfr/reg-sub :jobs-filtered
+  ;; signal fn
+  (fn [query-v _]
+    [(subscribe [:jobs])
+     (subscribe [:user-notes])
+     (subscribe [:filter-active-all])])
+
+  ;; compute
+  (fn [[jobs user-notes filters]]
+    (filter (fn [j]
+              (let [unotes (get user-notes (:hn-id j))]
+                (println :unotes unotes)
+                (and (or (not (get filters "REMOTE")) (:remote j))
+                   (or (not (get filters "ONSITE")) (:onsite j))
+                   (or (not (get filters "INTERNS")) (:interns j))
+                   (or (not (get filters "VISA")) (:visa j))
+                   (or (not (get filters "Excluded")) (:excluded unotes))
+                   (or (not (get filters "Noted")) (pos? (count (:notes unotes))))
+                   (or (not (get filters "Starred")) (pos? (:stars unotes)))
+                   (or (not (get filters "Applied")) (:applied unotes)))))
+      jobs)))
+
+;(reg-sub
+;  :filtered-jobs
+;
+;  ;; Signal Function
+;  ;; Tells us what inputs flow into this node.
+;  ;; Returns a vector of two input signals (in this case)
+;  (fn [query-v _]
+;    [(subscribe [:todos])
+;     (subscribe [:showing])])
+;
+;  ;; Computation Function
+;  (fn [[todos showing] _]   ;; that 1st parameter is a 2-vector of values
+;    (let [filter-fn (case showing
+;                      :active (complement :done)
+;                      :done   :done
+;                      :all    identity)]
+;      (filter filter-fn todos))))
 
 (declare mk-job-selects)
 
@@ -66,8 +106,6 @@
                               :style     {:background "#eee"}
                               :type      "checkbox"
                               :on-change (fn [e]
-                                           (println :bamchg
-                                             (.-checked (.-target e)))
                                            (rfr/dispatch [:filter-activate tag (.-checked (.-target e))]))}]
                      [:label {:for   (str tag "ID")
                               :title desc}

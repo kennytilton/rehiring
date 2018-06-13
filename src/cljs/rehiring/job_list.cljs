@@ -47,9 +47,8 @@
                    ^{:key (:hn-id j)} [job-list-item jn j])
               (range)
               ;; todo sexify
-              (let [raw-jobs @(rfr/subscribe [:jobs])
-                    sel-jobs (flt/job-list-filter raw-jobs)]
-                (println :new-seljobs (count sel-jobs))
+              (let [sel-jobs @(rfr/subscribe [:jobs-filtered])]
+                (println :new-seljobs!!!!!!! (count sel-jobs))
                 (take @(rfr/subscribe [:job-display-max])
                   (job-list-sort sel-jobs)))))]))
 
