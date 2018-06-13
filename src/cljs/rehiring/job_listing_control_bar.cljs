@@ -12,7 +12,7 @@
        [:div {:style utl/hz-flex-wrap-centered}
         [:span {:style {:font-size    "1em"
                         :margin-right "12px"}}
-         (let [jobs @(rfr/subscribe [:jobs])]
+         (let [jobs @(rfr/subscribe [:jobs-filtered])]
            (str "Jobs: " (count jobs)))]
 
         [:span {:style    {:padding-bottom "4px"

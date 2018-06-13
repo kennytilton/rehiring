@@ -17,7 +17,8 @@
   (println :rgxtreematch (subs text 0 20) tree)
   (some (fn [ands]
           (every? (fn [and]
-                   (boolean (re-find and text))))) tree))
+                   (boolean (re-find and text)))
+            ands)) tree))
 
 (rfr/reg-sub :jobs-filtered
                  ;; signal fn
@@ -25,13 +26,13 @@
                    [(subscribe [:jobs])
                     (subscribe [:user-notes])
                     (subscribe [:filter-active-all])
-                    ;(subscribe [:rgx-tree :title])
+                    (subscribe [:rgx-tree :title])
                     ;(subscribe [:rgx-tree :full])
                     ])
 
                  ;; compute
-                 (fn [[jobs user-notes filters]] ;;  title-rgx-tree full-rgx-tree]]
-                   ;;(println :filtering title-rgx-tree full-rgx-tree)
+                 (fn [[jobs user-notes filters title-rgx-tree]] ;;  title-rgx-tree full-rgx-tree]]
+                   (println :filtering!!!!!!!!!! filters (nil? title-rgx-tree))
                    (filter (fn [j]
                              (let [unotes (get user-notes (:hn-id j))]
                                (and (or (not (get filters "REMOTE")) (:remote j))
@@ -57,6 +58,7 @@
 
   ;; compute
   (fn [[jobs-filtered user-notes]]
+    (println :jfilex-sees (count jobs-filtered) (count user-notes))
     (filter (fn [j]
               (get-in user-notes [(:hn-id j) :excluded]))
       jobs-filtered)))
