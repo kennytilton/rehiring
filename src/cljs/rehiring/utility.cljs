@@ -53,3 +53,8 @@
 (def job-sorts [{:title "Creation" :key-fn :hn-id :order -1}
                 {:title "Stars" :comp-fn job-stars-compare :order -1 :prep-fn job-stars-enrich}
                 {:title "Company" :key-fn job-company-key :order 1}])
+
+(defn view-on-hn []
+  (fn [attrs uri]
+    [:a (merge {:href uri, :title "View on the HN site"} attrs)
+     [:img {:src "dist/hn24.png"}]]))

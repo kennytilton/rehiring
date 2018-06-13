@@ -12,3 +12,19 @@
     (update-in db [:show-job-details job-no] not)))
 
 
+;;; --- filtering -------------------------------------------------------
+
+(rfr/reg-event-db
+  :filter-activate
+  (fn [db [_ tag active?]]
+    (assoc-in db [:filter-active tag] active?)))
+
+(rfr/reg-event-db
+  :show-filtered-excluded-toggle
+  (fn [db [_ active?]]
+    (update db :show-filtered-excluded not)))
+
+(rfr/reg-sub
+  :show-filtered-excluded
+  (fn [db]
+    (:show-filtered-excluded db)))

@@ -24,7 +24,6 @@
                  (fn [[jobs user-notes filters]]
                    (filter (fn [j]
                              (let [unotes (get user-notes (:hn-id j))]
-                               (println :unotes unotes)
                                (and (or (not (get filters "REMOTE")) (:remote j))
                                     (or (not (get filters "ONSITE")) (:onsite j))
                                     (or (not (get filters "INTERNS")) (:interns j))
@@ -95,20 +94,5 @@
        (range)
        j-major-selects)]))
 
-;;; --- events -------------------------------------------------------
 
-(rfr/reg-event-db
-  :filter-activate
-  (fn [db [_ tag active?]]
-    (assoc-in db [:filter-active tag] active?)))
-
-(rfr/reg-event-db
-  :show-filtered-excluded-toggle
-  (fn [db [_ active?]]
-    (update db :show-filtered-excluded not)))
-
-(rfr/reg-sub
-  :show-filtered-excluded
-  (fn [db]
-    (:show-filtered-excluded db)))
 

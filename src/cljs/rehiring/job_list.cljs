@@ -11,7 +11,6 @@
 
 (defn job-list-sort [jobs]
   (let [{:keys [key-fn comp-fn order prep-fn]} @(rfr/subscribe [:job-sort])]
-    (println :sorting! key-fn comp-fn order)
     (sort (fn [j k]
             (if comp-fn
               (comp-fn order j k)

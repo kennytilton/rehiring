@@ -1,6 +1,7 @@
 (ns rehiring.job-loader
   (:require
     [clojure.walk :as walk]
+    [rehiring.utility :as utl]
     [rehiring.db :as rhdb]
     [rehiring.subs :as subs]
     [re-frame.core :as rfr]
@@ -33,7 +34,13 @@
                  [:option {:key hnId :value hnId}
                   desc]))
           (range)
-          months))]]))
+          months))]
+     [:div {:style utl/hz-flex-wrap}
+      (when-let [month-hn-id @(rfr/subscribe [:month-hn-id])]
+        [utl/view-on-hn {:hidden (nil? month-hn-id)}
+         (pp/cl-format nil "https://news.ycombinator.com/item?id=~a" month-hn-id)])]]))
+
+
 
 (declare mk-page-loader jobs-collect)
 
