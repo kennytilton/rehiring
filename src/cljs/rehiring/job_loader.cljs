@@ -36,11 +36,12 @@
           (range)
           months))]
      [:div {:style utl/hz-flex-wrap}
-      (when-let [month-hn-id @(rfr/subscribe [:month-hn-id])]
-        [utl/view-on-hn {:hidden (nil? month-hn-id)}
-         (pp/cl-format nil "https://news.ycombinator.com/item?id=~a" month-hn-id)])]]))
-
-
+      [utl/view-on-hn {:hidden (nil? @(rfr/subscribe [:month-hn-id]))}
+       (pp/cl-format nil "https://news.ycombinator.com/item?id=~a" @(rfr/subscribe [:month-hn-id]))]
+      [:span {:style {:color "#fcfcfc"
+                      :margin "0 12px 0 12px"}
+              :hidden (nil? @(rfr/subscribe [:month-hn-id]))}
+       (str "Total jobs: " (count @(rfr/subscribe [:jobs])))]]]))
 
 (declare mk-page-loader jobs-collect)
 

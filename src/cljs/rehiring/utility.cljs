@@ -58,3 +58,24 @@
   (fn [attrs uri]
     [:a (merge {:href uri, :title "View on the HN site"} attrs)
      [:img {:src "dist/hn24.png"}]]))
+
+(defn help-list [helpItems helping]
+  (fn []
+    [:div {:class    (str "help " (slide-in-anime @helping))
+           :style    {:display (if @helping "block" "none")
+                      :margin-top 0
+                      :padding-top "6px"}
+           :on-click (fn [mx]
+                       (reset! helping false))}
+     [:div {:style {:cursor      "pointer"
+                    :textAlign   "left"
+                    :marginRight "18px"}}
+      [:ul {:style {:listStyle  "none"
+                    :marginLeft 0}}
+       (map (fn [ex e]
+              ^{:key ex} [:li {
+                               :style {:padding 0
+                                       :margin  "0 18px 9px 0"}}
+                          [:div {:dangerouslySetInnerHTML {:__html e}}]])
+         (range)
+         helpItems)]]]))

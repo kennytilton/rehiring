@@ -16,6 +16,8 @@
      :job-sort (nth utl/job-sorts 0)
      :show-filters true
      :show-filtered-excluded false
+     :rgx-match-case false
+     :rgx-xlate-or-and true
      :show-job-details      {}                              ;; key is hnId, value t/f; handle default in view
      }))
 

@@ -48,24 +48,5 @@
         [:div.headermain
          [:span.askhn "Ask HN:"]
          [:span.who "Who Is Hiring?"]]]
-       [help-list appHelpEntry "appHelp" helping]])))
+       [utl/help-list appHelpEntry helping]])))
 
-(defn help-list [helpItems helpName helping]
-  (fn []
-    [:div {:class    (str "help " (utl/slide-in-anime @helping))
-           :style    {:display (if @helping "block" "none")
-                      :margin-top 0}
-           :on-click (fn [mx]
-                       (reset! helping false))}
-     [:div {:style {:cursor      "pointer"
-                    :textAlign   "left"
-                    :marginRight "18px"}}
-      [:ul {:style {:listStyle  "none"
-                    :marginLeft 0}}
-       (map (fn [ex e]
-              ^{:key ex} [:li {
-                               :style {:padding 0
-                                       :margin  "0 18px 9px 0"}}
-                          [:div {:dangerouslySetInnerHTML {:__html e}}]])
-         (range)
-         helpItems)]]]))

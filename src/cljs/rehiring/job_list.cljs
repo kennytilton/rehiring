@@ -22,19 +22,17 @@
 
 (defn job-list-item []
   (fn [job-no job]
-    (let [excluded @(rfr/subscribe [:unotes-prop (:hn-id job) :excluded])
-          display (if (and excluded (not @(rfr/subscribe [:show-filtered-excluded])))
-                    "none" "block")]
-      ;;(println (:company job) (:hn-id job) excluded display)
       [:li {:style {:cursor     "pointer"
-                    :display    display
+                    :display    (let [excluded @(rfr/subscribe [:unotes-prop (:hn-id job) :excluded])]
+                                  (if (and excluded (not @(rfr/subscribe [:show-filtered-excluded])))
+                                    "none" "block"))
                     :padding    "12px"
                     :background (if (zero? (mod job-no 2))
                                   "#eee" "#f8f8f8")}
             ;;:on-click #(rfr/dispatch [::evt/toggle-show-job-details job-no])
             }
        [job-header job]
-       [job-details job]])))
+       [job-details job]]))
 
 (defn job-list []
   (fn []

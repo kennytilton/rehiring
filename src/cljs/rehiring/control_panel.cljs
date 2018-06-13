@@ -2,19 +2,8 @@
   (:require [rehiring.filtering :as flt]
             [rehiring.utility :as utl]
             [rehiring.job-listing-control-bar :as jlcb]
-            [re-frame.core :as rfr]))
-
-;function toggleChar ( name, title, initialState, onChar, offChar, attrs={}, locals={},style="") {
-;       return span( Object.assign( {
-;                                    style: "font-weight:bold; cursor:pointer; margin-left:9px; font-family:Arial; font-size:1em;"+style
-;, onclick: mx => mx.onOff = !mx.onOff
-;, title: title
-;, content: cF( c=> c.md.onOff? onChar:offChar)
-;                                                                                                                  }, attrs)
-;, Object.assign( {
-;      name: name
-;            , onOff: cI( initialState)
-;      }, locals))
+            [re-frame.core :as rfr]
+            [rehiring.regex-search :as rgx]))
 
 (defn toggle-char [db-key title on-char off-char attrs style]
   (fn []
@@ -35,6 +24,7 @@
 
 (rfr/reg-event-db :toggle-key
   (fn [db [_ db-key]]
+    (println :toggling db-key :now (get db db-key))
     (update db db-key not)))
 
 (defn open-shut-case [toggle-db-key title & cases]
@@ -99,6 +89,9 @@
      [open-shut-case :show-filters "Filters"
       flt/mk-title-selects
       flt/mk-user-selects]
+
+     [rgx/mk-regex-search]
+
      [sort-bar]
 
      [jlcb/job-listing-control-bar]]))

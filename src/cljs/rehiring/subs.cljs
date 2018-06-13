@@ -14,3 +14,8 @@
   (fn [db [_ hn-id]]
     ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
     (get-in db [:show-job-details hn-id])))
+
+(rfr/reg-sub :toggle-key
+  (fn [db [_ db-key]]
+    (println :togg-sub-runs! db-key (get db db-key))
+    (get db db-key)))

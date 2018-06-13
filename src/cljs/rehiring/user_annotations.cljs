@@ -2,7 +2,7 @@
   (:require
     [goog.string :as gs]
     [reagent.core :as rgt]
-    [re-frame.core :as rfr]
+    [re-frame.core :refer [reg-sub subscribe] :as rfr]
     [rehiring.utility :as utl]))
 
 
@@ -32,8 +32,21 @@
     (get-in db [:user-notes hn-id])))
 
 (rfr/reg-sub :unotes-prop
-  (fn [db [_ hn-id property]]
-    (get-in db [:user-notes hn-id property])))
+  ;; signal fn
+  (fn [[_ hn-id prop] _]
+    ;;(println :sigpropu hn_id prop)
+    (subscribe [:unotes hn-id]))
+
+  ;; compute
+  (fn [unotes [_ id prop]]
+    ;(println :bam-prop id prop (get unotes prop) unotes)
+    (get unotes prop)))
+
+;(rfr/reg-sub :unotes-prop
+;  (fn [db [_ hn-id property]]
+;    (when (nil? hn-id)
+;      (println :oops hn-id property))
+;    (get-in db [:user-notes hn-id property])))
 
 (rfr/reg-event-fx :unotes-prop-toggle
   (fn [{:keys [db]} [_ hn-id property]]
