@@ -26,13 +26,11 @@
                :on-change (fn [e]
                             (let [opt (.-target e)
                                   hnid (.-value opt)]
-                              (println "Hello onchange" (js->clj opt) hnid)
                               (rfr/dispatch [:month-set hnid])))}
       (let []
         (map (fn [mno mo-def]
                (let [{:keys [hnId desc] :as all} mo-def]
-                 [:option {:key hnId :value hnId}
-                  desc]))
+                 ^{:key mno} [:option {:key hnId :value hnId} desc]))
           (range)
           months))]
      [:div {:style utl/hz-flex-wrap}
@@ -82,7 +80,7 @@
   (if-let [cont-doc (.-contentDocument ifr-dom)]
     (let [hn-body (aget (.getElementsByTagName cont-doc "body") 0)]
       (let [things (take 100 (prim-seq (.querySelectorAll hn-body ".athing")))]
-        (println :things (count things))
+        #_ (println :things (count things))
         (let [jobs (filter #(:OK %) (map job-spec things))]
           (set! (.-innerHTML hn-body) "")
           ;;(println :j3 (take 10 jobs))

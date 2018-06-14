@@ -18,7 +18,7 @@
 (defn unote->local-storage
   [unote]
   (let [nkey (str utl/ls-key "-unotes-" (:hn-id unote))]
-    (println :storing-unote (:hn-id unote) nkey unote)
+    #_ (println :storing-unote (:hn-id unote) nkey unote)
     (.setItem js/localStorage nkey (str unote))))
 
 ;;; --- re-frame-ese ---------------------------------
@@ -72,7 +72,7 @@
          ^{:key sn} [:span {:style    {:cursor "pointer"
                                        :color  (if (>= j-stars (inc sn)) "red" "gray")}
                             :on-click (fn [e]
-                                        (println :bamchg-stars
+                                        #_ (println :bamchg-stars
                                           sn (.-checked (.-target e)))
                                         (rfr/dispatch [:unotes-prop-set (:hn-id job) :stars
                                                        (if (= sn (dec j-stars))

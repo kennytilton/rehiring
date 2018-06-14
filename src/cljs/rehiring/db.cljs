@@ -37,7 +37,7 @@
                 (ls-get-wild (str utl/ls-key "-unotes-") :hn-id))))
 
 (defn io-all-keys []
-  (println :js/local-keys (.keys js/Object js/localStorage))
+  #_ (println :js/local-keys (.keys js/Object js/localStorage))
   (.keys js/Object (.-localStorage js/window)))
 
 (defn ls-get-wild [prefix key-property]

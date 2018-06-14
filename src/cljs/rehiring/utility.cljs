@@ -79,3 +79,31 @@
                           [:div {:dangerouslySetInnerHTML {:__html e}}]])
          (range)
          helpItems)]]]))
+
+(defn toggle-char [db-key title on-char off-char attrs style]
+  (fn []
+    (let [on-off @(rfr/subscribe [db-key])]
+      [:span (merge {:style    (merge {:font-weight "bold"
+                                       :cursor      "pointer"
+                                       :margin-left "9px"
+                                       :font-family "Arial"
+                                       :font-size   "1em"} style)
+                     :title    title
+                     :on-click #(rfr/dispatch [:toggle-key db-key])}
+               attrs)
+       (unesc (if on-off on-char off-char))])))
+
+(defn open-shut-case [toggle-db-key title & cases]
+  (fn []
+    [:div
+     [:div {:class "selector"}
+      [:span title]
+      [toggle-char toggle-db-key
+       (str "Show/hide " title)
+       "&#x25be", "&#x25b8" {} {}]]
+
+     [:div {:class "osBody"
+            :style {:background "#ff6600"
+                    :display    (if @(rfr/subscribe [toggle-db-key]) "block" "none")}}
+      (for [case cases]
+        ^{:key (rand-int 100000)} (case))]]))

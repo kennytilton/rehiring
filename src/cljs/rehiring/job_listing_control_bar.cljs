@@ -2,29 +2,36 @@
   (:require [re-frame.core :refer [subscribe] :as rfr]
             [rehiring.utility :as utl]))
 
-(rfr/reg-sub :jobs-filtered-excluded
-  ;
-  ; This is weird. jobs-filtered includes excluded jobs so we can let
-  ; the user show/hide them while browsing a selection. This state then
-  ; lets us tell them how many jobs matched by their search are hidden
-  ; because the user has excluded them. Indeed, we might even be able
-  ; to have this do no more than compute the count.
-  ;
-  ;; signal fn
-  (fn [query-v _]
-    [(subscribe [:jobs-filtered])
-     (subscribe [:user-notes])])
 
-  ;; compute
-  (fn [[jobs-filtered user-notes]]
-    (println :jfilex-sees (count jobs-filtered) (count user-notes))
-    (filter (fn [j]
-              (get-in user-notes [(:hn-id j) :excluded]))
-      jobs-filtered)))
+;;; --- sub-components ---------------------------------------
 
+(defn job-expansion-control []
+  (fn []
+    [:button {:style    {:font-size "1em"
+                         :min-width "128px"
+                         ;; display after jobs loaded todo
+                         }
+              :on-click #(rfr/dispatch [:toggle-details-visibility-all])}
+     (case @(rfr/subscribe [:toggle-details-action])
+       "collapse" "Collapse all"
+       "expand" "Expand all"
+       "hunh all")]))
 
-
-;;; --- display limit ------------------------------------------------
+(defn excluded-count []
+  (fn []
+    (let [excluded @(rfr/subscribe [:jobs-filtered-excluded])]
+      [:span {:style    {:padding-bottom "4px"
+                         :cursor         "pointer"
+                         :display        "flex"
+                         :align-items    "center"
+                         :font-size      "1em"
+                         :visibility     (if (pos? (count excluded)) "visible" "hidden")
+                         :border         (if @(rfr/subscribe [:show-filtered-excluded])
+                                           "thin solid red" "none")
+                         :title          "Show/hide items you have excluded"}
+              :on-click #(rfr/dispatch [:show-filtered-excluded-toggle])
+              }
+       (str (utl/unesc "&#x20E0;") ": " (count excluded))])))
 
 (defn result-max []
   (fn []
@@ -38,7 +45,7 @@
                                  (rfr/dispatch [:set-result-display-max (js/parseInt (.-value (.-target %)))]))
 
                 :on-blur      #(let [new (.-value (.-target %))]
-                                 (println "blur new" new (js/parseInt new))
+                                 #_ (println "blur new" new (js/parseInt new))
                                  (rfr/dispatch [:set-result-display-max (js/parseInt new)]))
 
                 :style        {:font-size    "1em"
@@ -46,6 +53,25 @@
                                :margin-left  "6px"
                                :margin-right "6px"
                                }}])]))
+
+;;; --- the beef --------------------------------------------------
+
+(defn job-listing-control-bar []
+  (fn []
+    [:div {:class "listingControlBar"}
+       [:div {:style utl/hz-flex-wrap-centered}
+        ;;; --- match count---------------------------------------------------
+        [:span {:style {:font-size    "1em"
+                        :margin-right "12px"}}
+         (let [jobs @(rfr/subscribe [:jobs-filtered])]
+           (str "Jobs: " (count jobs)))]
+
+        [excluded-count]]
+       [result-max]
+       [job-expansion-control]]))
+
+;;; --- reframe plumbing ------------------------------------------------
+
 (rfr/reg-sub
   :job-display-max
   (fn [db]
@@ -54,7 +80,6 @@
 (rfr/reg-event-db
   :set-result-display-max
   (fn [db [_ rmax]]
-    (println :new-rmax->db rmax)
     (assoc db :job-display-max rmax)))
 
 (rfr/reg-sub
@@ -72,47 +97,22 @@
                                           "expand" "collapse")
                  :show-job-details      new-deets}))))
 
+(rfr/reg-sub :jobs-filtered-excluded
+  ;
+  ; This is weird. jobs-filtered includes excluded jobs so we can let
+  ; the user show/hide them while browsing a selection. This state then
+  ; lets us tell them how many jobs matched by their search are hidden
+  ; because the user has excluded them. Indeed, we might even be able
+  ; to have this do no more than compute the count.
+  ;
+  ;; signal fn
+  (fn [query-v _]
+    [(subscribe [:jobs-filtered])
+     (subscribe [:user-notes])])
 
-;;; --- expand/collapse all jobs ---------------------------------------
-
-(defn jobs-all-expansion []
-  (fn []
-    [:button {:style    {:font-size "1em"
-                         :min-width "128px"
-                         ;; display after jobs loaded todo
-                         }
-              :on-click #(rfr/dispatch [:toggle-details-visibility-all])}
-     (case @(rfr/subscribe [:toggle-details-action])
-       "collapse" "Collapse all"
-       "expand" "Expand all"
-       "hunh all")]))
-
-;;; --- the beef --------------------------------------------------
-
-(defn job-listing-control-bar []
-  (fn []
-    (let [excluded @(rfr/subscribe [:jobs-filtered-excluded])]
-      [:div {:class "listingControlBar"}
-       ;;; --- match count---------------------------------------------------
-       [:div {:style utl/hz-flex-wrap-centered}
-        [:span {:style {:font-size    "1em"
-                        :margin-right "12px"}}
-         (let [jobs @(rfr/subscribe [:jobs-filtered])]
-           (str "Jobs: " (count jobs)))]
-
-        [:span {:style    {:padding-bottom "4px"
-                           :cursor         "pointer"
-                           :display        "flex"
-                           :align-items    "center"
-                           :font-size      "1em"
-                           :visibility     (if (pos? (count excluded)) "visible" "hidden")
-                           :border         (if @(rfr/subscribe [:show-filtered-excluded])
-                                             "thin solid red" "none")
-                           :title          "Show/hide items you have excluded"}
-                :on-click #(rfr/dispatch [:show-filtered-excluded-toggle])
-                }
-         (str (utl/unesc "&#x20E0;") ": " (count excluded))]]
-
-       [result-max]
-       [jobs-all-expansion]])))
-
+  ;; compute
+  (fn [[jobs-filtered user-notes]]
+    #_ (println :jfilex-sees (count jobs-filtered) (count user-notes))
+    (filter (fn [j]
+              (get-in user-notes [(:hn-id j) :excluded]))
+      jobs-filtered)))

@@ -78,7 +78,7 @@
                              (rfr/dispatch [:rgx-unparsed-set prop (str/trim (.-value (.-target %)))]))
 
             :on-blur      #(let [rgx-raw (str/trim (.-value (.-target %)))]
-                             (println :rgx!!!!!!!! prop rgx-raw)
+                             #_ (println :rgx!!!!!!!! prop rgx-raw)
                              (rfr/dispatch [:rgx-unparsed-set prop rgx-raw]))
 
             :on-focus     #(.setSelectionRange (.-target %) 0 999)
@@ -89,10 +89,10 @@
                            :height    "2em"}}]
    [:datalist {:id (str prop "list")}
     (let [hs @(rfr/subscribe [:search-history prop])]
-      (println :prop-hs prop hs)
+      #_ (println :prop-hs prop hs)
       (when hs
         (map (fn [hn h]
-               (println :dlist!!!!!! h)
+               #_ (println :dlist!!!!!! h)
                ^{:key hn} [:option {:value h}])
           (range)
           hs)))]])
@@ -100,7 +100,7 @@
 (rfr/reg-event-fx :rgx-unparsed-set
   (fn [{:keys [db]} [_ scope raw]]
     (let [new-db (assoc-in db [:rgx-unparsed scope] raw)]
-      (println :queueing :search-history-extend scope raw)
+      #_ (println :queueing :search-history-extend scope raw)
       {:db       new-db
        :dispatch [:search-history-extend scope raw]})))
 
@@ -116,7 +116,7 @@
 
   ;; compute
   (fn [[rgx-raw xlate-or-and]]
-    (println :de-alias-compute!! rgx-raw xlate-or-and)
+    #_ (println :de-alias-compute!! rgx-raw xlate-or-and)
     (when rgx-raw
       (if xlate-or-and
         (str/replace (str/replace rgx-raw #"\sand\s" " && ") #"\sor\s" " || ")
@@ -130,7 +130,7 @@
 
   ;; compute
   (fn [signals]
-    (println :sigs signals)
+    #_ (println :sigs signals)
     (let [[rgx-normal match-case] signals]
       ;;(println :rgx-normal rgx-normal (type rgx-normal) (type (js->clj rgx-normal)))
       (when rgx-normal
@@ -161,7 +161,7 @@
 
 (rfr/reg-event-db :search-history-extend
   (fn [db [_ scope raw]]
-    (println :new-hist!!!!!! scope raw)
+    #_ (println :new-hist!!!!!! scope raw)
     (update-in db [:search-history scope] conj raw)))
 (rfr/reg-sub :search-history
   (fn [db [_ prop]]

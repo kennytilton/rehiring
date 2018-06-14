@@ -47,7 +47,7 @@
               (range)
               ;; todo sexify
               (let [sel-jobs @(rfr/subscribe [:jobs-filtered])]
-                (println :new-seljobs!!!!!!! (count sel-jobs))
+                #_ (println :new-seljobs!!!!!!! (count sel-jobs))
                 (take @(rfr/subscribe [:job-display-max])
                   (job-list-sort sel-jobs)))))]))
 
