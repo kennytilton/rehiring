@@ -83,7 +83,7 @@
                              (rfr/dispatch [:rgx-unparsed-set prop rgx-raw]))
             ;; todo on keypress
             :on-focus     #(.setSelectionRange (.-target %) 0 999)
-            :value        (if (= prop :title) "crowd,q" "")
+            ;;:value        (if (= prop :title) "crowd,q" "")
             ;;:on-change   #(happy?)
             :style        {:min-width "72px"
                            :font-size "1em"

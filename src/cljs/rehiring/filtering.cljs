@@ -16,11 +16,12 @@
 (defn rgx-tree-match [text tree]
   (println :rgxtreematch (subs text 0 20) tree)
   (some (fn [ands]
-          (and ands
-               (every? (fn [andx]
-                         (and andx
-                           (boolean (re-find and text))))
-                 ands))) tree))
+          (println :ands ands)
+          (when ands
+            (every? (fn [andx]
+                      (when andx
+                        (boolean (re-find andx text))))
+              ands))) tree))
 
 (rfr/reg-sub :jobs-filtered
   ;; signal fn
