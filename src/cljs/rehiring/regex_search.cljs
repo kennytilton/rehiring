@@ -66,46 +66,6 @@
 
 (defn happy? [])
 
-;function rebuildRgxTree( mx) {
-;
-;      let matchCase = mx.fmUp("rgxMatchCase").value
-;, cvtOrAnd = mx.fmUp("rgxOrAnd").value
-;, search =  cvtOrAnd? mx.rgxRaw.replace(/\sor\s/," || ").replace(/\sand\s/," && ") : mx.rgxRaw;
-;
-;      clg("building from search str", search);
-;
-;
-;  mx.rgxTree = search.split('||').map(orx => orx.trim().split('&&').map(andx => {
-;           try {
-;                let [term, options=''] = andx.trim().split(',')
-;                                                            if ( !matchCase && options.search('i') === -1)
-;                                                            options = options + 'i'
-;                                                            return new RegExp( term, options)
-;                }
-;           catch (error) {
-;                          alert(error.toString() + ": <" + andx.trim() + ">")
-;                          }
-;           }))
-;}
-
-
-
-
-
-;function buildRgxTree(mx, e) {
-;mx.rgxRaw = e.target.value.trim()
-;
-;if (mx.rgxRaw === '') {
-;           mx.rgxTree = null // test
-;           } else {
-;                   if (mx.history.indexOf( mx.rgxRaw) === -1) {
-;                                                               //clg('adding to rgx!!!!', mx.rgxRaw)
-;                                                               mx.history = mx.history.concat(mx.rgxRaw)
-;                                                               }
-;                      rebuildRgxTree(mx)
-;                   }
-;}
-
 (defn mk-listing-rgx [prop label desc]
   [:div {:style {:display        "flex"
                  :flex-direction "column"
@@ -113,19 +73,21 @@
    [:span {:style {:color     "white"
                    :font-size "0.7em"}}
     label]
-   [:input {:placeholder (pp/cl-format nil "Regex for ~a search" desc)
-            :list        (str prop "list")
-            :on-blur     #(let [rgx-raw (str/trim (.-value (.-target %)))]
-                            (println :rgx!!!!!!!! prop rgx-raw)
-                            (rfr/dispatch [:rgx-unparsed-set prop rgx-raw]))
+   [:input {:placeholder  (pp/cl-format nil "Regex for ~a search" desc)
+            :list         (str prop "list")
+            :on-key-press #(when (= "Enter" (js->clj (.-key %)))
+                             (rfr/dispatch [:rgx-unparsed-set prop (str/trim (.-value (.-target %)))]))
+
+            :on-blur      #(let [rgx-raw (str/trim (.-value (.-target %)))]
+                             (println :rgx!!!!!!!! prop rgx-raw)
+                             (rfr/dispatch [:rgx-unparsed-set prop rgx-raw]))
             ;; todo on keypress
-            :on-focus    #(.setSelectionRange (.-target %) 0 999)
-            :value       (when (= prop :title)
-                           "Crowd")
-            :on-change   #(happy?)
-            :style       {:min-width "72px"
-                          :font-size "1em"
-                          :height    "2em"}}]
+            :on-focus     #(.setSelectionRange (.-target %) 0 999)
+            :value        (if (= prop :title) "crowd,q" "")
+            ;;:on-change   #(happy?)
+            :style        {:min-width "72px"
+                           :font-size "1em"
+                           :height    "2em"}}]
    [:datalist {:id (str prop "list")}
     (map (fn [hs]
            [:option {:value hs}])
@@ -176,17 +138,18 @@
                             (let [[term options] (str/split (str/trim and-term) ",")
                                   netopts (if (and (not match-case)
                                                    (not (str/includes? (or options "") "i")))
-                                            (str options "i"))]
+                                            (str options "i")
+                                            "")]
                               (println :newrgx and-term term netopts options)
                               (try
                                 (let [rgx (js/RegExp. term netopts)]
                                   (println :truergx!!!! rgx)
                                   rgx)
                                 (catch js/Object ex
-                                  (println :caught-regex-exception)
+                                  (js/alert (str "Invalid regex: " rgx-normal))
                                   nil))))
-                       (str/split or-term #"&&"))))
-              or-terms)))))))
+                       (str/split or-term #"&&")))))
+            or-terms))))))
 
 
 (rfr/reg-sub :search-history
