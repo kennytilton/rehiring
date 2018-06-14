@@ -14,9 +14,9 @@
     (get-in db [:filter-active tag])))
 
 (defn rgx-tree-match [text tree]
-  (println :rgxtreematch (subs text 0 20) tree)
+  ;;(println :rgxtreematch (subs text 0 20) tree)
   (some (fn [ands]
-          (println :ands ands)
+          ;;(println :ands ands)
           (when ands
             (every? (fn [andx]
                       (when andx

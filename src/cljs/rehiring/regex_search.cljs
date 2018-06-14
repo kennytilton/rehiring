@@ -89,13 +89,30 @@
                            :font-size "1em"
                            :height    "2em"}}]
    [:datalist {:id (str prop "list")}
-    (map (fn [hs]
-           [:option {:value hs}])
-      @(rfr/subscribe [:search-history prop]))]])
+    (let [hs @(rfr/subscribe [:search-history prop])]
+      (println :prop-hs prop hs)
+      (when hs
+        (map (fn [hn h]
+               (println :dlist!!!!!! h)
+               ^{:key hn}[:option {:value h}])
+          (range)
+          hs)))]])
 
-(rfr/reg-event-db :rgx-unparsed-set
+;(rfr/reg-event-db :rgx-unparsed-set
+;  (fn [db [_ scope raw]]
+;    (assoc-in db [:rgx-raw scope] raw)))
+
+(rfr/reg-event-fx :rgx-unparsed-set
+  (fn [{:keys [db]} [_ scope raw]]
+    (let [new-db (assoc-in db [:rgx-raw scope] raw)]
+      (println :queueing :search-history-extend scope raw)
+      {:db       new-db
+       :dispatch [:search-history-extend scope raw]})))
+
+(rfr/reg-event-db :search-history-extend
   (fn [db [_ scope raw]]
-    (assoc-in db [:rgx-raw scope] raw)))
+    (println :new-hist!!!!!! scope raw)
+    (update-in db [:search-history scope] conj raw)))
 
 (rfr/reg-sub :rgx-raw
   (fn [db [_ scope]]
@@ -125,22 +142,22 @@
   (fn [signals]
     (println :sigs signals)
     (let [[rgx-normal match-case] signals]
-      (println :rgx-normal rgx-normal (type rgx-normal) (type (js->clj rgx-normal)))
+      ;;(println :rgx-normal rgx-normal (type rgx-normal) (type (js->clj rgx-normal)))
       (when rgx-normal
         (let [or-terms (str/split (js->clj rgx-normal) #"\|\|")]
-          (println :or-terms or-terms (count or-terms))
+          ;;(println :or-terms or-terms (count or-terms))
           (into []
             (map (fn [or-term]
-                   (println :or-term or-term)
+                   ;;(println :or-term or-term)
                    (into []
                      (map (fn [and-term]
-                            (println :and-term and-term)
+                            ;;(println :and-term and-term)
                             (let [[term options] (str/split (str/trim and-term) ",")
                                   netopts (if (and (not match-case)
                                                    (not (str/includes? (or options "") "i")))
                                             (str options "i")
                                             "")]
-                              (println :newrgx and-term term netopts options)
+                              ;;(println :newrgx and-term term netopts options)
                               (try
                                 (let [rgx (js/RegExp. term netopts)]
                                   (println :truergx!!!! rgx)
@@ -155,11 +172,9 @@
 (rfr/reg-sub :search-history
   (fn [db [_ prop]]
     ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
-    (get-in db [:search-details prop])))
+    (get-in db [:search-history prop])))
 
-(rfr/reg-event-db :search-history-extend
-  (fn [db [_ prop new-search]]
-    (update-in db [:search-history prop] conj new-search)))
+
 
 (defn mk-title-rgx []
   ^{:key "title"}

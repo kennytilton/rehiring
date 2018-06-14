@@ -18,6 +18,7 @@
      :show-filtered-excluded false
      :rgx-match-case false
      :rgx-xlate-or-and true
+     :search-history {}
      :show-job-details      {}                              ;; key is hnId, value t/f; handle default in view
      }))
 
