@@ -1,28 +1,45 @@
 (ns rehiring.utility
   (:require
     [goog.string :as gs]
-    [re-frame.core :as rfr]))
+    [re-frame.core :as rfr]
+    [clojure.walk :as walk]))
 
-(defn slide-in-anime [ show?]
+(def ls-key "rehiring-browser")                             ;; localstore key
+
+(defn gMonthlies-cljs []
+  ;; gMonthlies defined in index.html for extensibility
+  (walk/keywordize-keys (js->clj js/gMonthlies)))
+
+(defn get-monthly-def [hn-id]
+  (some (fn [mo]
+          (println :get-mo hn-id (type hn-id) (type (:hnId mo)))
+          (when (= (:hnId mo) hn-id)
+            (println :mo-bam mo)
+            mo))
+    (gMonthlies-cljs)))
+
+;;; --- handy CSS --------------------------------------------
+
+(defn slide-in-anime [show?]
   (if show? "slideIn" "slideOut"))
 
-(def hz-flex-wrap {:display "flex"
+(def hz-flex-wrap {:display   "flex"
                    :flex-wrap "wrap"})
 
-(def ls-key "rehiring-browser")                         ;; localstore key
-
 (def hz-flex-wrap-centered
-  {:display "flex"
-   :flex-wrap "wrap"
+  {:display     "flex"
+   :flex-wrap   "wrap"
    :align-items "center"})
 
 (def hz-flex-wrap-bottom
-  {:display "flex"
-   :flex-wrap "wrap"
+  {:display     "flex"
+   :flex-wrap   "wrap"
    :align-items "bottom"})
 
 (defn unesc [entity]
   (gs/unescapeEntities entity))
+
+;;; --- sorting ---------------------------------------------
 
 (defn job-company-key [j]
   (or (:company j) ""))
@@ -54,6 +71,9 @@
                 {:title "Stars" :comp-fn job-stars-compare :order -1 :prep-fn job-stars-enrich}
                 {:title "Company" :key-fn job-company-key :order 1}])
 
+
+;;; --- re-usable widgetry ----------------------------------------------
+
 (defn view-on-hn []
   (fn [attrs uri]
     [:a (merge {:href uri, :title "View on the HN site"} attrs)
@@ -62,8 +82,8 @@
 (defn help-list [helpItems helping]
   (fn []
     [:div {:class    (str "help " (slide-in-anime @helping))
-           :style    {:display (if @helping "block" "none")
-                      :margin-top 0
+           :style    {:display     (if @helping "block" "none")
+                      :margin-top  0
                       :padding-top "6px"}
            :on-click (fn [mx]
                        (reset! helping false))}

@@ -24,7 +24,7 @@
 (rfr/reg-sub :jobs-filtered
   ;; signal fn
   (fn [query-v _]
-    [(subscribe [:jobs])
+    [(subscribe [:month-jobs])
      (subscribe [:user-notes])
      (subscribe [:filter-active-all])
      (subscribe [:rgx-tree :title])
@@ -42,6 +42,7 @@
                      (or (not (get filters "Excluded")) (:excluded unotes))
                      (or (not (get filters "Noted")) (pos? (count (:notes unotes))))
                      (or (not (get filters "Applied")) (:applied unotes))
+                     (or (not (get filters "Starred")) (pos? (:stars unotes)))
                      (or (not title-rgx-tree) (rgx-tree-match (:title-search j) title-rgx-tree))
                      (or (not full-rgx-tree) (or
                                                (rgx-tree-match (:title-search j) full-rgx-tree)

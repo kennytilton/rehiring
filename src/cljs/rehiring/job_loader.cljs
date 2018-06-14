@@ -10,91 +10,6 @@
 
 ;; --- loading job data -----------------------------------------
 
-(defn monthlies-kw []
-  (walk/keywordize-keys (js->clj js/gMonthlies)))
-
-(rfr/reg-event-db
-  :month-set
-  (fn [db [_ hn-id]]
-    (assoc db :month-hn-id hn-id)))
-
-(defn pick-a-month []
-  (let [months (monthlies-kw)]
-    [:div {:class "pickAMonth"}
-     [:select {:class     "searchMonth"
-               :value     (:hnId (nth months rhdb/SEARCH-MO-STARTING-IDX))
-               :on-change (fn [e]
-                            (let [opt (.-target e)
-                                  hnid (.-value opt)]
-                              (rfr/dispatch [:month-set hnid])))}
-      (let []
-        (map (fn [mno mo-def]
-               (let [{:keys [hnId desc] :as all} mo-def]
-                 ^{:key mno} [:option {:key hnId :value hnId} desc]))
-          (range)
-          months))]
-     [:div {:style utl/hz-flex-wrap}
-      [utl/view-on-hn {:hidden (nil? @(rfr/subscribe [:month-hn-id]))}
-       (pp/cl-format nil "https://news.ycombinator.com/item?id=~a" @(rfr/subscribe [:month-hn-id]))]
-      [:span {:style {:color "#fcfcfc"
-                      :margin "0 12px 0 12px"}
-              :hidden (nil? @(rfr/subscribe [:month-hn-id]))}
-       (str "Total jobs: " (count @(rfr/subscribe [:jobs])))]]]))
-
-(declare mk-page-loader jobs-collect)
-
-(defn job-listing-loader []
-  (fn []
-    [:div {:style {:display "none"}}
-     (let [selId @(rfr/subscribe [:month-hn-id])
-           moDef (some (fn [mo]
-                         (when (= (:hnId mo) selId)
-                           mo))
-                   (monthlies-kw))]
-       (assert moDef)
-       ;;(println :modef (:pgCount moDef) moDef)
-
-       (if (pos? (:pgCount moDef))
-         (doall (map (fn [pgn]
-                       ^{:key (str selId "-" (inc pgn))} [mk-page-loader selId (inc pgn)])
-                  (range (:pgCount moDef))))
-         [mk-page-loader selId]))]))
-
-(rfr/reg-event-db
-  :month-page-collect
-  (fn [db [_ ifr-dom hn-id pg-no]]
-    ;(println :replacing-jobs hn-id pg-no)
-    (assoc db :jobs (jobs-collect ifr-dom))))
-
-(defn mk-page-loader []
-  (fn [hn-id pg-no]
-    (let [src-url (pp/cl-format nil "files/~a/~a.html" hn-id (or pg-no hn-id))]
-      [:iframe {:src     src-url
-                :on-load #(let [ifr (.-target %)]
-                            ;;(println "Loaded!!" ifr hn-id pg-no src-url)
-                            (rfr/dispatch [:month-page-collect ifr hn-id pg-no]))}])))
-
-(declare job-spec job-spec-extend)
-
-(defn jobs-collect [ifr-dom]
-  (if-let [cont-doc (.-contentDocument ifr-dom)]
-    (let [hn-body (aget (.getElementsByTagName cont-doc "body") 0)]
-      (let [things (take 100 (prim-seq (.querySelectorAll hn-body ".athing")))]
-        #_ (println :things (count things))
-        (let [jobs (filter #(:OK %) (map job-spec things))]
-          (set! (.-innerHTML hn-body) "")
-          ;;(println :j3 (take 10 jobs))
-          (take 10 jobs))))
-    []))
-
-(defn job-spec [dom]
-  ;;(println "jobid!" (.-id dom) dom)
-  (let [spec (atom {:hn-id (.-id dom)})]
-    (doseq [child (prim-seq (.-children dom))]
-      (job-spec-extend spec child))
-    (when (:OK @spec)
-      ;;(println :fini (dissoc @spec :body :body-search))
-      @spec)))
 
 (def internOK (js/RegExp. "internship|intern" "i"))
 (def nointernOK (js/RegExp. "no internship|no intern" "i"))
@@ -104,7 +19,12 @@
 (def remoteOK (js/RegExp. "remote" "i"))
 (def noremoteOK (js/RegExp. "no remote" "i"))
 
-(defn job-spec-extend [spec dom]
+(defn job-spec-extend
+  "A parsed job (a spec) begins as {:hn-id <HN id>} then
+  gets extended as we recursively explore the .aThing. Note that
+  not all aThings are jobs, so look for :ok being set"
+  [spec dom]
+
   (let [cn (.-className dom)]
     (when (some #{cn} ["c5a" "cae" "c00" "c9c" "cdd" "c73" "c88"])
       (when-let [rs (.getElementsByClassName dom "reply")]
@@ -156,4 +76,131 @@
     (when (not= cn "reply")
       (doseq [child (prim-seq (.-children dom))]
         (job-spec-extend spec child)))))
+
+(defn job-spec [dom]
+  ;;(println "jobid!" (.-id dom) dom)
+  (let [spec (atom {:hn-id (.-id dom)})]
+    (doseq [child (prim-seq (.-children dom))]
+      (job-spec-extend spec child))
+    (when (:OK @spec)
+      ;;(println :fini (dissoc @spec :body :body-search))
+      @spec)))
+
+
+;;; --- dev limits -----------------------------
+;;; n.b.: these will be limits *per page*
+
+(def ATHING-PARSE-MAX 1000000)
+(def JOB-LOAD-MAX 10000)
+
+(defn jobs-collect [ifr-dom]
+  (if-let [cont-doc (.-contentDocument ifr-dom)]
+    (let [hn-body (aget (.getElementsByTagName cont-doc "body") 0)]
+      (let [things (take ATHING-PARSE-MAX (prim-seq (.querySelectorAll hn-body ".athing")))]
+        (println :athings (count things))
+        (let [jobs (filter #(:OK %) (map job-spec things))]
+          (println :ok-jobs (count jobs))
+          (set! (.-innerHTML hn-body) "")
+          (take JOB-LOAD-MAX jobs))))
+    []))                                                    ;; todo need to force []?
+
+;;; --- single page of jobs loading --------------------------------------------
+
+(rfr/reg-event-db :month-page-collect
+  (fn [db [_ url ifr-dom]]
+    (assoc-in db [:page-load-tasks url] (jobs-collect ifr-dom))))
+
+(defn mk-page-loader []
+  (fn [src-url]
+    (println :iframe-loading-url src-url)
+    [:iframe {:src     src-url
+              :on-load #(let [ifr (.-target %)]
+                          (println "HN Jobs Page IFrame Loaded!!" src-url)
+                          (rfr/dispatch [:month-page-collect src-url ifr]))}]))
+
+;;; --- month loading ----------------------------------------------------------
+
+(defn job-listing-loader []
+  (fn []
+    [:div {:style {:display "block"}}
+     (let [pages @(rfr/subscribe [:page-load-tasks])]
+       (println :jll-sees-pages pages)
+       (map (fn [[url load-state]]
+              (println :jllcheck url load-state)) pages)
+
+       (doall
+           (map (fn [[url load-state]]
+                  (println :mk-p url)
+                  ;;[:p url]
+                  ^{:key url}
+                  [mk-page-loader url])
+             pages)))]))
+
+(rfr/reg-event-db :month-set
+  (fn [db [_ hn-id]]
+    (let [mo-def (utl/get-monthly-def hn-id)]
+      (assoc db
+        :month-hn-id hn-id))))
+
+(rfr/reg-sub :page-load-tasks
+  (fn [__]
+    [(rfr/subscribe [:month-hn-id])])
+
+  (fn [[month-hn-id]]
+    (let [mo-def (utl/get-monthly-def month-hn-id)]
+      (println :computing-pages-to-load!!!!!!!!! month-hn-id mo-def)
+      ;; we start with a dictionary of loading tasks keyed by the file URLs to be loaded
+      ;; when all tasks have the initial :unloaded token replaced (by a vector of jobs), the derived
+      ;; :month-jobs sub will take on its value by concat-ing them all
+      (let [pairs (for [url (if (pos? (:pgCount mo-def))
+                              (map (fn [pg-offset]
+                                     ;; files are numbered off-by-one to match the page param on HN
+                                     (pp/cl-format nil "files/~a/~a.html" month-hn-id (inc pg-offset)))
+                                (range (:pgCount mo-def)))
+                              ;; next we see some advanced Lisp format-ese, backing up to re-use hn-id
+                              [(pp/cl-format nil "files/~a/~:*~a.html" month-hn-id)])]
+                    (do (println :plt-url url)
+                        [url :unloaded]))]
+        (println :pairs pairs)
+        (let [d (into {}
+                  pairs)]
+          (println :dict d)
+          d)))))
+
+(rfr/reg-sub :month-jobs
+  ;; signal fn
+  (fn [_ _]
+    [(rfr/subscribe [:page-load-tasks])])
+
+  ;; compute
+  (fn [[page-load-tasks]]
+    (println :mojobs-sees page-load-tasks)
+    (when (every? (fn [[k v]]
+                    (println :pgjob k v)
+                    (not= v :unloaded)) page-load-tasks)
+      (println :bam-all-pages-loaded (map (fn [k v] [k (count v)]) page-load-tasks))
+      (apply concat (vals page-load-tasks)))))
+
+;;; --- UI: month selecting by user ------------------------------------------
+
+(defn pick-a-month []
+  (let [months (utl/gMonthlies-cljs)]
+    [:div {:class "pickAMonth"}
+     [:select {:class     "searchMonth"
+               :value     @(rfr/subscribe [:month-hn-id])
+               :on-change #(do (println :bam-mo (.-value (.-target %)))
+                               (rfr/dispatch [:month-set (.-value (.-target %))]))}
+      (let []
+        (map (fn [mno mo-def]
+               (let [{:keys [hnId desc] :as all} mo-def]
+                 ^{:key mno} [:option {:key hnId :value hnId} desc]))
+          (range)
+          months))]
+     [:div {:style utl/hz-flex-wrap}
+      [utl/view-on-hn {:hidden (nil? @(rfr/subscribe [:month-hn-id]))}
+       (pp/cl-format nil "https://news.ycombinator.com/item?id=~a" @(rfr/subscribe [:month-hn-id]))]
+      [:span {:style  {:color  "#fcfcfc"
+                       :margin "0 12px 0 12px"}
+              :hidden (nil? @(rfr/subscribe [:month-hn-id]))}
+       (str "Total jobs: " "hhack" #_ (count @(rfr/subscribe [:month-jobs])))]]]))
 

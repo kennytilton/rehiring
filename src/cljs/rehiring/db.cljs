@@ -4,61 +4,54 @@
             [clojure.string :as str]
             [rehiring.utility :as utl]))
 
-(def SEARCH-MO-STARTING-IDX 0)
+(def INITIAL-SEARCH-MO-IDX 0)                               ;; handy when debugging specific month
 
 (defn initial-db []
-  (let [months (walk/keywordize-keys (js->clj js/gMonthlies))]
-    {:months                months
-     :month-hn-id           (:hnId (nth months SEARCH-MO-STARTING-IDX))
-     :job-collapse-all      false
-     :toggle-details-action "expand"
-     :job-display-max       42                           ;; todo restore to 42
-     :job-sort (nth utl/job-sorts 0)
-     :show-filters true
+  (let [months (utl/gMonthlies-cljs)]
+    {;; :months                months
+     :month-hn-id            (:hnId (nth months INITIAL-SEARCH-MO-IDX))
+     :job-collapse-all       false
+     :toggle-details-action  "expand"
+     :job-display-max        42
+     :job-sort               (nth utl/job-sorts 0)
+     :show-filters           true
      :show-filtered-excluded false
-     :rgx-match-case false
-     :rgx-xlate-or-and true
-     :search-history {}
-     :show-job-details      {}                              ;; key is hnId, value t/f; handle default in view
+     :rgx-match-case         false
+     :rgx-xlate-or-and       true
+     :search-history         {}
+     :show-job-details       {}
      }))
 
+(defn io-all-keys []
+  (.keys js/Object (.-localStorage js/window)))
+
+(defn ls-get-wild
+  "Loads all localStorage values whose key begins with
+  prefix into a dictionary, using the rest of the LS key
+   as the dictionary key."
+  [prefix]
+
+  (into {}
+    (remove nil?
+      (for [lsk (io-all-keys)]
+        (when (and (str/starts-with? lsk prefix)
+                   ;; ugh, we got some garbage in LS
+                   ;; may as well create permanent filter
+                   (> (count lsk) (count prefix)))
+          [(subs lsk (count prefix))                        ;; toss prefix
+           (cljs.reader/read-string
+             (.getItem js/localStorage lsk))])))))
+
+(rfr/reg-cofx
+  :storage-user-notes
+  (fn [cofx _]
+    (assoc cofx
+      :storage-user-notes
+      (ls-get-wild (str utl/ls-key "-unotes-")))))
+
 (rfr/reg-event-fx ::initialize-db
-  [(rfr/inject-cofx :local-store-unotes)]
+  [(rfr/inject-cofx :storage-user-notes)]
 
   (fn [{:keys [local-store-unotes]} _]
     {:db (assoc (initial-db) :user-notes local-store-unotes)}))
 
-(declare ls-get-wild)
-
-(rfr/reg-cofx
-  :local-store-unotes
-  (fn [cofx _]
-    (assoc cofx :local-store-unotes
-                (ls-get-wild (str utl/ls-key "-unotes-") :hn-id))))
-
-(defn io-all-keys []
-  #_ (println :js/local-keys (.keys js/Object js/localStorage))
-  (.keys js/Object (.-localStorage js/window)))
-
-(defn ls-get-wild [prefix key-property]
-  (let [allk (io-all-keys)]
-    (into {}
-      (remove nil?
-        (for [lsk allk]
-          (do
-            (when (and (str/starts-with? lsk prefix)
-                       (> (count lsk) (count prefix)))
-
-              [(subs lsk (count prefix))
-               (cljs.reader/read-string
-                 (.getItem js/localStorage lsk))])))))))
-
-(defn io-find [key-prefix]
-  (loop [keys (io-all-keys)
-         found []]
-    (if (seq keys)
-      (recur (rest keys)
-        (if (str/starts-with? (first keys) key-prefix)
-          (conj found (first keys))
-          found))
-      found)))

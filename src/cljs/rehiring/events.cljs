@@ -1,3 +1,6 @@
+;;; A home for uninteresting plumbing that just clutters
+;;; up the source.
+
 (ns rehiring.events
   (:require
    [re-frame.core :as rfr]

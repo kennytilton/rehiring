@@ -90,7 +90,7 @@
 (rfr/reg-event-db
   :toggle-details-visibility-all
   (fn [db [_ hn-id]]
-    (let [new-deets (into {} (for [hn-id (map :hn-id (:jobs db))]
+    (let [new-deets (into {} (for [hn-id (map :hn-id (:month-jobs db))]
                                [hn-id (= "expand" (:toggle-details-action db))]))]
       (merge db {:toggle-details-action (case (:toggle-details-action db)
                                           "collapse" "expand"
