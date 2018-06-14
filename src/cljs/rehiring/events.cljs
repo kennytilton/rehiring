@@ -24,7 +24,3 @@
   (fn [db [_ active?]]
     (update db :show-filtered-excluded not)))
 
-(rfr/reg-sub
-  :show-filtered-excluded
-  (fn [db]
-    (:show-filtered-excluded db)))

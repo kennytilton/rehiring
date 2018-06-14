@@ -18,3 +18,7 @@
 (rfr/reg-sub :toggle-key
   (fn [db [_ db-key]]
     (get db db-key)))
+
+(rfr/reg-sub :show-filtered-excluded
+  (fn [db]
+    (:show-filtered-excluded db)))

@@ -5,8 +5,6 @@
             [reagent.core :as rgt]
             [clojure.string :as str]))
 
-
-
 (defn mk-rgx-match-case []
   (fn []
     [:div {:style {:color       "#fcfcfc"
@@ -39,13 +37,13 @@
      [:label {:for "rgxOrAnd"}
       "allow or/and"]]))
 
-(defn help-toggle []
-  [:p "help"])
-
 (def regexHelpEntry
-  (map identity
-    ["Press <kbd style='background:cornsilk;font-size:1em'>Enter</kbd> or <kbd style='background:cornsilk;font-size:1em'>Tab</kbd> to activate, including after clearing.", (str "Separate <a href='https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions'>JS RegExp-legal</a> terms with <b>||</b> or "
-                                                                                                                                                                              "<b>&&</b> (higher priority) to combine expressions."), "'Allow or/and' option treats those as ||/&& for easier mobile entry.", "Regex terms are split on comma and passed to <b>new RegExp(pattern,flags)</b>.", "e.g. Enter <b>taipei,i</b> for case-insensitive search."]))
+  ["Press <kbd style='background:cornsilk;font-size:1em'>Enter</kbd> or <kbd style='background:cornsilk;font-size:1em'>Tab</kbd> to activate, including after clearing."
+   (str "Separate <a href='https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions'>JS RegExp-legal</a> terms with <b>||</b> or "
+     "<b>&&</b> (higher priority) to combine expressions.")
+    "'Allow or/and' option treats those as ||/&& for easier mobile entry."
+   "Regex terms are split on comma and passed to <b>new RegExp(pattern,flags)</b>."
+   "e.g. Enter <b>taipei,i</b> for case-insensitive search."])
 
 (defn mk-rgx-options []
   (let [helping (rgt/atom false)]
@@ -64,9 +62,10 @@
         ]
        [utl/help-list regexHelpEntry helping]])))
 
-(defn happy? [])
-
-(defn mk-listing-rgx [prop label desc]
+(defn mk-listing-rgx
+  "This is generic enough to handle the two search fields, title only
+  and the full listing including title"
+  [prop label desc]
   [:div {:style {:display        "flex"
                  :flex-direction "column"
                  :margin         "6px 18px 0 30px"}}
@@ -81,10 +80,10 @@
             :on-blur      #(let [rgx-raw (str/trim (.-value (.-target %)))]
                              (println :rgx!!!!!!!! prop rgx-raw)
                              (rfr/dispatch [:rgx-unparsed-set prop rgx-raw]))
-            ;; todo on keypress
+
             :on-focus     #(.setSelectionRange (.-target %) 0 999)
             ;;:value        (if (= prop :title) "crowd,q" "")
-            ;;:on-change   #(happy?)
+
             :style        {:min-width "72px"
                            :font-size "1em"
                            :height    "2em"}}]
@@ -94,34 +93,25 @@
       (when hs
         (map (fn [hn h]
                (println :dlist!!!!!! h)
-               ^{:key hn}[:option {:value h}])
+               ^{:key hn} [:option {:value h}])
           (range)
           hs)))]])
 
-;(rfr/reg-event-db :rgx-unparsed-set
-;  (fn [db [_ scope raw]]
-;    (assoc-in db [:rgx-raw scope] raw)))
-
 (rfr/reg-event-fx :rgx-unparsed-set
   (fn [{:keys [db]} [_ scope raw]]
-    (let [new-db (assoc-in db [:rgx-raw scope] raw)]
+    (let [new-db (assoc-in db [:rgx-unparsed scope] raw)]
       (println :queueing :search-history-extend scope raw)
       {:db       new-db
        :dispatch [:search-history-extend scope raw]})))
 
-(rfr/reg-event-db :search-history-extend
-  (fn [db [_ scope raw]]
-    (println :new-hist!!!!!! scope raw)
-    (update-in db [:search-history scope] conj raw)))
-
-(rfr/reg-sub :rgx-raw
+(rfr/reg-sub :rgx-unparsed
   (fn [db [_ scope]]
-    (get-in db [:rgx-raw scope])))
+    (get-in db [:rgx-unparsed scope])))
 
 (rfr/reg-sub :rgx-de-aliased
   ;; signal fn
   (fn [[_ scope] _]
-    [(rfr/subscribe [:rgx-raw scope])
+    [(rfr/subscribe [:rgx-unparsed scope])
      (rfr/subscribe [:toggle-key :rgx-xlate-or-and])])
 
   ;; compute
@@ -169,12 +159,14 @@
             or-terms))))))
 
 
+(rfr/reg-event-db :search-history-extend
+  (fn [db [_ scope raw]]
+    (println :new-hist!!!!!! scope raw)
+    (update-in db [:search-history scope] conj raw)))
 (rfr/reg-sub :search-history
   (fn [db [_ prop]]
     ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
     (get-in db [:search-history prop])))
-
-
 
 (defn mk-title-rgx []
   ^{:key "title"}
