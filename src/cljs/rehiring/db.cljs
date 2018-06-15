@@ -12,7 +12,7 @@
      :month-hn-id            (:hnId (nth months INITIAL-SEARCH-MO-IDX))
      :job-collapse-all       false
      :toggle-details-action  "expand"
-     :job-display-max        3
+     :job-display-max        42
      :job-sort               (nth utl/job-sorts 0)
      :show-filters           true
      :show-filtered-excluded false
