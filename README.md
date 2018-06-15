@@ -1,6 +1,6 @@
 # rehiring
 
-A [re-frame](https://github.com/Day8/re-frame) application designed to ... well, that part is up to you.
+My ["AskHN: Who Is Hiring"](https://github.com/kennytilton/whoshiring) browser ported to [re-frame](https://github.com/Day8/re-frame). Search and annotate the hundreds of jobs listed every month.
 
 ## Development Mode
 
