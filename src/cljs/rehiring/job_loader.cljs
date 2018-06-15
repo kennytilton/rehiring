@@ -173,9 +173,17 @@
   ;; compute
   (fn [[urls scrapes]]
     (println :mojobs-sees urls (keys scrapes))
-    (when (= (count urls) (count scrapes))
-      (println :bam-all-pages-loaded (map (fn [k v] [k (count v)]) scrapes))
-      (apply concat (vals scrapes)))))
+
+    (when (and (pos? (count scrapes))
+               (= (count urls) (count scrapes)))
+      (loop [[s & more] (vals scrapes)
+             cum (first (vals scrapes))
+             seen (into #{} (map :hn-id (first (vals scrapes))))
+             ]
+        (if (nil? s)
+          cum
+          (let [new (remove (fn [j] (contains? seen (:hn-id j))) s)]
+            (recur more (concat cum new) (clojure.set/union seen (into #{} (map :hn-id new))))))))))
 
 ;;; --- UI: month selecting by user ------------------------------------------
 
