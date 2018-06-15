@@ -1,6 +1,6 @@
 # rehiring
 
-My ["AskHN: Who Is Hiring"](https://github.com/kennytilton/whoshiring) browser ported to [re-frame](https://github.com/Day8/re-frame). Search and annotate the hundreds of jobs listed every month.
+My Javascript/mxWeb&trade; ["AskHN: Who Is Hiring"](https://github.com/kennytilton/whoshiring) browser ported to CLJS/[re-frame](https://github.com/Day8/re-frame). Search and annotate the hundreds of jobs listed every month.
 
 If yer just lookin' for work, a live version is [hosted here](https://kennytilton.github.io/whoishiring/) grace a GitHub. Or you can clone this and run it yourself. See below for a devops necessity.
 
