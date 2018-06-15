@@ -9,7 +9,7 @@
 (defn initial-db []
   (let [months (utl/gMonthlies-cljs)]
     {;; :months                months
-     :month-hn-id            (:hnId (nth months INITIAL-SEARCH-MO-IDX))
+     :month-hn-id            "17205865" ;; hhhack (:hnId (nth months INITIAL-SEARCH-MO-IDX))
      :job-collapse-all       false
      :toggle-details-action  "expand"
      :job-display-max        42

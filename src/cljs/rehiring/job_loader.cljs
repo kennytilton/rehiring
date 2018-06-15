@@ -104,82 +104,78 @@
           (take JOB-LOAD-MAX jobs))))
     []))                                                    ;; todo need to force []?
 
-;;; --- single page of jobs loading --------------------------------------------
+(rfr/reg-event-db :month-set
+  (fn [db [_ month-hn-id]]
+    (let [mo-def (utl/get-monthly-def month-hn-id)]
+      (println :month-set month-hn-id)
+      (assoc db
+        :month-hn-id month-hn-id
+        :page-scrapes {}                                    ;; key url, value jobs
+        ))))
 
-(rfr/reg-event-db :month-page-collect
-  (fn [db [_ url ifr-dom]]
-    (assoc-in db [:page-load-tasks url] (jobs-collect ifr-dom))))
+(rfr/reg-sub :urls-to-scrape
+  (fn [__]
+    [(rfr/subscribe [:month-hn-id])])
+
+  (fn [[month-hn-id]]
+    ;; when page-scrapes has a key for every urls-to-scrape, the month is loaded
+    (let [mo-def (utl/get-monthly-def month-hn-id)]
+      (println :queueing-page-loads month-hn-id mo-def)
+      ;; we start with a dictionary of loading tasks keyed by the file URLs to be loaded
+      ;; when all tasks have the initial :unloaded token replaced (by a vector of jobs), the derived
+      ;; :month-jobs sub will take on its value by concat-ing them all
+      (if (pos? (:pgCount mo-def))
+        (map (fn [pg-offset]
+               ;; files are numbered off-by-one to match the page param on HN
+               (pp/cl-format nil "files/~a/~a.html" month-hn-id (inc pg-offset)))
+          (range (:pgCount mo-def)))
+        ;; next we see some advanced Lisp format-ese, backing up to re-use hn-id
+        [(pp/cl-format nil "files/~a/~:*~a.html" month-hn-id)]))))
+
+;;; --- single page of jobs loading --------------------------------------------
 
 (defn mk-page-loader []
   (fn [src-url]
-    (println :iframe-loading-url src-url)
     [:iframe {:src     src-url
               :on-load #(let [ifr (.-target %)]
                           (println "HN Jobs Page IFrame Loaded!!" src-url)
-                          (rfr/dispatch [:month-page-collect src-url ifr]))}]))
+                          (rfr/dispatch [:month-page-scraped src-url (jobs-collect ifr)]))}]))
+
+(rfr/reg-event-db :month-page-scraped
+  (fn [db [_ url jobs]]
+    (println :scraped! url (count jobs))
+    (assoc-in db [:page-scrapes url] jobs)))
 
 ;;; --- month loading ----------------------------------------------------------
 
 (defn job-listing-loader []
   (fn []
-    [:div {:style {:display "block"}}
-     (let [pages @(rfr/subscribe [:page-load-tasks])]
-       (println :jll-sees-pages pages)
-       (map (fn [[url load-state]]
-              (println :jllcheck url load-state)) pages)
-
+    [:div {:style {:display "none"}}
+     (let [month-id @(rfr/subscribe [:month-hn-id])
+           page-urls @(rfr/subscribe [:urls-to-scrape])]
+       (println :job-listing-loader-sees-urls month-id page-urls)
        (doall
-           (map (fn [[url load-state]]
-                  (println :mk-p url)
-                  ;;[:p url]
-                  ^{:key url}
-                  [mk-page-loader url])
-             pages)))]))
+         (map (fn [url]
+                (println :mk-pageloader url)
+                ^{:key url} [mk-page-loader url])
+           page-urls)))]))
 
-(rfr/reg-event-db :month-set
-  (fn [db [_ hn-id]]
-    (let [mo-def (utl/get-monthly-def hn-id)]
-      (assoc db
-        :month-hn-id hn-id))))
-
-(rfr/reg-sub :page-load-tasks
-  (fn [__]
-    [(rfr/subscribe [:month-hn-id])])
-
-  (fn [[month-hn-id]]
-    (let [mo-def (utl/get-monthly-def month-hn-id)]
-      (println :computing-pages-to-load!!!!!!!!! month-hn-id mo-def)
-      ;; we start with a dictionary of loading tasks keyed by the file URLs to be loaded
-      ;; when all tasks have the initial :unloaded token replaced (by a vector of jobs), the derived
-      ;; :month-jobs sub will take on its value by concat-ing them all
-      (let [pairs (for [url (if (pos? (:pgCount mo-def))
-                              (map (fn [pg-offset]
-                                     ;; files are numbered off-by-one to match the page param on HN
-                                     (pp/cl-format nil "files/~a/~a.html" month-hn-id (inc pg-offset)))
-                                (range (:pgCount mo-def)))
-                              ;; next we see some advanced Lisp format-ese, backing up to re-use hn-id
-                              [(pp/cl-format nil "files/~a/~:*~a.html" month-hn-id)])]
-                    (do (println :plt-url url)
-                        [url :unloaded]))]
-        (println :pairs pairs)
-        (let [d (into {}
-                  pairs)]
-          (println :dict d)
-          d)))))
+(rfr/reg-sub :page-scrapes
+  (fn [db]
+    (:page-scrapes db)))
 
 (rfr/reg-sub :month-jobs
-  ;; signal fn
+  ;; signal fnxx
   (fn [_ _]
-    [(rfr/subscribe [:page-load-tasks])])
+    [(rfr/subscribe [:urls-to-scrape])
+     (rfr/subscribe [:page-scrapes])])
 
   ;; compute
-  (fn [[page-load-tasks]]
-    (println :mojobs-sees page-load-tasks)
-    (when (every? (fn [[k v]]
-                    (println :pgjob k v)
-                    (not= v :unloaded)) page-load-tasks)
-      (println :bam-all-pages-loaded (map (fn [k v] [k (count v)]) page-load-tasks))
-      (apply concat (vals page-load-tasks)))))
+  (fn [[urls scrapes]]
+    (println :mojobs-sees urls (keys scrapes))
+    (when (= (count urls) (count scrapes))
+      (println :bam-all-pages-loaded (map (fn [k v] [k (count v)]) scrapes))
+      (apply concat (vals scrapes)))))
 
 ;;; --- UI: month selecting by user ------------------------------------------
 
@@ -202,5 +198,5 @@
       [:span {:style  {:color  "#fcfcfc"
                        :margin "0 12px 0 12px"}
               :hidden (nil? @(rfr/subscribe [:month-hn-id]))}
-       (str "Total jobs: " "hhack" #_ (count @(rfr/subscribe [:month-jobs])))]]]))
+       (str "Total jobs: " "hhack" #_(count @(rfr/subscribe [:month-jobs])))]]]))
 
