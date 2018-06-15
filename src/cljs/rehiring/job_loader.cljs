@@ -206,5 +206,5 @@
       [:span {:style  {:color  "#fcfcfc"
                        :margin "0 12px 0 12px"}
               :hidden (nil? @(rfr/subscribe [:month-hn-id]))}
-       (str "Total jobs: " "hhack" #_(count @(rfr/subscribe [:month-jobs])))]]]))
+       (str "Total jobs: " (count @(rfr/subscribe [:month-jobs])))]]]))
 

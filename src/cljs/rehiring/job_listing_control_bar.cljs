@@ -7,15 +7,16 @@
 
 (defn job-expansion-control []
   (fn []
-    [:button {:style    {:font-size "1em"
-                         :min-width "128px"
-                         ;; display after jobs loaded todo
-                         }
-              :on-click #(rfr/dispatch [:toggle-details-visibility-all])}
-     (case @(rfr/subscribe [:toggle-details-action])
-       "collapse" "Collapse all"
-       "expand" "Expand all"
-       "hunh all")]))
+    (let [mo-jobs @(rfr/subscribe [:month-jobs])]
+      [:button {:style    {:font-size "1em"
+                           :min-width "128px"
+                           ;; display after jobs loaded todo
+                           }
+                :on-click #(rfr/dispatch [:toggle-details-visibility-all mo-jobs])}
+       (case @(rfr/subscribe [:toggle-details-action])
+         "collapse" "Collapse all"
+         "expand" "Expand all"
+         "hunh all")])))
 
 (defn excluded-count []
   (fn []
@@ -72,26 +73,24 @@
 
 ;;; --- reframe plumbing ------------------------------------------------
 
-(rfr/reg-sub
-  :job-display-max
+(rfr/reg-sub :job-display-max
   (fn [db]
     (:job-display-max db)))
 
-(rfr/reg-event-db
-  :set-result-display-max
+(rfr/reg-event-db :set-result-display-max
   (fn [db [_ rmax]]
     (assoc db :job-display-max rmax)))
 
-(rfr/reg-sub
-  :toggle-details-action
+(rfr/reg-sub :toggle-details-action
   (fn [db]
     (:toggle-details-action db)))
 
-(rfr/reg-event-db
-  :toggle-details-visibility-all
-  (fn [db [_ hn-id]]
-    (let [new-deets (into {} (for [hn-id (map :hn-id (:month-jobs db))]
+(rfr/reg-event-db :toggle-details-visibility-all
+  (fn [db [_ jobs]]
+    (println :toggle-details-visibility-all (count jobs))
+    (let [new-deets (into {} (for [hn-id (map :hn-id jobs)]
                                [hn-id (= "expand" (:toggle-details-action db))]))]
+
       (merge db {:toggle-details-action (case (:toggle-details-action db)
                                           "collapse" "expand"
                                           "expand" "collapse")
@@ -100,8 +99,11 @@
 (rfr/reg-sub :jobs-filtered-excluded
   ;
   ; This is weird. jobs-filtered includes excluded jobs so we can let
-  ; the user show/hide them while browsing a selection. This state then
-  ; lets us tell them how many jobs matched by their search are hidden
+  ; the user show/hide them while browsing a selection. Kinda like when
+  ; we search gmail and it says "10 found, 3 more in trash". Sooo...
+  ;
+  ; This subscription provides the info needed to inform users
+  ; how many jobs matched by their search are hidden
   ; because the user has excluded them. Indeed, we might even be able
   ; to have this do no more than compute the count.
   ;

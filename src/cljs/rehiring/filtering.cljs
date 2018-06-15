@@ -70,6 +70,7 @@
                                           :class     (str tag "-jSelect")
                                           :style     {:background "#eee"}
                                           :type      "checkbox"
+                                          :defaultValue false
                                           :on-change (fn [e]
                                                        (rfr/dispatch [:filter-activate tag (.-checked (.-target e))]))}]
                                  [:label {:for   (str tag "ID")

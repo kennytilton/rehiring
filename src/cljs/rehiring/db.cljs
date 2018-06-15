@@ -9,10 +9,10 @@
 (defn initial-db []
   (let [months (utl/gMonthlies-cljs)]
     {;; :months                months
-     :month-hn-id            "17205865" ;; hhhack (:hnId (nth months INITIAL-SEARCH-MO-IDX))
+     :month-hn-id            "17205865"                     ;; hhhack (:hnId (nth months INITIAL-SEARCH-MO-IDX))
      :job-collapse-all       false
      :toggle-details-action  "expand"
-     :job-display-max        42
+     :job-display-max        3
      :job-sort               (nth utl/job-sorts 0)
      :show-filters           true
      :show-filtered-excluded false
@@ -45,13 +45,15 @@
 (rfr/reg-cofx
   :storage-user-notes
   (fn [cofx _]
-    (assoc cofx
-      :storage-user-notes
-      (ls-get-wild (str utl/ls-key "-unotes-")))))
+    (let [notes (ls-get-wild (str utl/ls-key "-unotes-"))]
+      (assoc cofx
+        :storage-user-notes
+        (ls-get-wild (str utl/ls-key "-unotes-"))))))
 
 (rfr/reg-event-fx ::initialize-db
   [(rfr/inject-cofx :storage-user-notes)]
 
-  (fn [{:keys [local-store-unotes]} _]
-    {:db (assoc (initial-db) :user-notes local-store-unotes)}))
+  (fn [{:keys [storage-user-notes]} _]
+    (println :bam-notes storage-user-notes)
+    {:db (assoc (initial-db) :user-notes storage-user-notes)}))
 

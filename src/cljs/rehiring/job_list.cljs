@@ -60,6 +60,7 @@
 (defn job-details []
   (fn [job]
     (let [deets @(rfr/subscribe [:show-job-details (:hn-id job)])]
+      (println :building-jdeets (:hn-id job) deets)
 
       [:div {:class (if deets "slideIn" "slideOut")
              :style {:margin     "6px"

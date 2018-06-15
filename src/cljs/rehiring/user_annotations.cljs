@@ -18,7 +18,7 @@
 (defn unote->local-storage
   [unote]
   (let [nkey (str utl/ls-key "-unotes-" (:hn-id unote))]
-    #_ (println :storing-unote (:hn-id unote) nkey unote)
+    (println :storing-unote (:hn-id unote) nkey unote)
     (.setItem js/localStorage nkey (str unote))))
 
 ;;; --- re-frame-ese ---------------------------------
@@ -58,6 +58,7 @@
 
 (rfr/reg-event-fx :persist-unote
   (fn [cfx [_ hn-id unotes]]
+    (println :persisting!!!!-unote hn-id unotes)
     (unote->local-storage unotes)))
 
 ;;; --- components -----------------------------------

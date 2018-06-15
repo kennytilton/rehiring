@@ -19,13 +19,11 @@
 
 ;;; --- filtering -------------------------------------------------------
 
-(rfr/reg-event-db
-  :filter-activate
+(rfr/reg-event-db :filter-activate
   (fn [db [_ tag active?]]
     (assoc-in db [:filter-active tag] active?)))
 
-(rfr/reg-event-db
-  :show-filtered-excluded-toggle
+(rfr/reg-event-db :show-filtered-excluded-toggle
   (fn [db [_ active?]]
     (update db :show-filtered-excluded not)))
 
