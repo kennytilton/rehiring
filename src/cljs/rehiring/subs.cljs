@@ -12,8 +12,11 @@
 
 (reg-sub :show-job-details
   (fn [db [_ hn-id]]
-    ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
     (get-in db [:show-job-details hn-id])))
+
+(reg-sub :job-collapse-all
+  (fn [db [_ hn-id]]
+    (:job-collapse-all db)))
 
 (reg-sub :toggle-key
   (fn [db [_ db-key]]

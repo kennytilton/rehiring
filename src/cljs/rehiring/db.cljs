@@ -4,12 +4,12 @@
             [clojure.string :as str]
             [rehiring.utility :as utl]))
 
-(def INITIAL-SEARCH-MO-IDX 0)                               ;; handy when debugging specific month
+(def INITIAL-SEARCH-MO-IDX 1)                               ;; handy when debugging specific month
 
 (defn initial-db []
   (let [months (utl/gMonthlies-cljs)]
     {;; :months                months
-     :month-hn-id            "17205865"                     ;; hhhack (:hnId (nth months INITIAL-SEARCH-MO-IDX))
+     :month-hn-id            (:hnId (nth months INITIAL-SEARCH-MO-IDX))
      :job-collapse-all       false
      :toggle-details-action  "expand"
      :job-display-max        3
@@ -42,8 +42,13 @@
            (cljs.reader/read-string
              (.getItem js/localStorage lsk))])))))
 
-(rfr/reg-cofx
-  :storage-user-notes
+(rfr/reg-cofx :storage-user-notes
+  ;; load user notes from local storage
+  ;; todo: name rectification
+  ;; one glitch in naming: a user can have multiple notes on one job,
+  ;; so I ended up with plurals at two levels. "unotes" are a collection
+  ;; of notes on *one job*. "user-notes" are the collection of "unotes".
+  ;;
   (fn [cofx _]
     (let [notes (ls-get-wild (str utl/ls-key "-unotes-"))]
       (assoc cofx
@@ -54,6 +59,5 @@
   [(rfr/inject-cofx :storage-user-notes)]
 
   (fn [{:keys [storage-user-notes]} _]
-    (println :bam-notes storage-user-notes)
     {:db (assoc (initial-db) :user-notes storage-user-notes)}))
 

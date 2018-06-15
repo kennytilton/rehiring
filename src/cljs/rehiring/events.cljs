@@ -1,5 +1,4 @@
-;;; A home for uninteresting plumbing that just clutters
-;;; up the source.
+;;; A home for uninteresting plumbing
 
 (ns rehiring.events
   (:require
@@ -9,8 +8,6 @@
 
 (rfr/reg-event-db ::toggle-show-job-details
   (fn [db [_ job-no]]
-    ;(println ::toggle-show-job-details job-no (type job-no))
-    ;(println :all-deets (:show-job-details db))
     (update-in db [:show-job-details job-no] not)))
 
 (rfr/reg-event-db :job-sort-set
@@ -29,5 +26,4 @@
 
 (rfr/reg-event-db :toggle-key
   (fn [db [_ db-key]]
-    #_ (println :toggling db-key :now (get db db-key))
     (update db db-key not)))

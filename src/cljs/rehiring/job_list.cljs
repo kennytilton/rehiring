@@ -30,9 +30,7 @@
                                     "none" "block"))
                     :padding    "12px"
                     :background (if (zero? (mod job-no 2))
-                                  "#eee" "#f8f8f8")}
-            ;;:on-click #(rfr/dispatch [::evt/toggle-show-job-details job-no])
-            }
+                                  "#eee" "#f8f8f8")}}
        [job-header job]
        [job-details job]]))
 
@@ -40,28 +38,18 @@
   (fn []
     [:ul {:style {:list-style-type "none"
                   :background      "#eee"
+                  ;; these next defeat gratuitous default styling of ULs by browser
                   :padding         0
                   :margin          0}}
      (doall (map (fn [jn j]
                    ^{:key (:hn-id j)} [job-list-item jn j])
               (range)
-              ;; todo sexify
-              (let [sel-jobs @(rfr/subscribe [:jobs-filtered])]
-                #_ (println :new-seljobs!!!!!!! (count sel-jobs))
-                (take @(rfr/subscribe [:job-display-max])
-                  (job-list-sort sel-jobs)))))]))
-
-(rfr/reg-sub
-  :job-collapse-all
-  (fn [db [_ hn-id]]
-    ;;(println :sub-runs! hn-id (get-in db [:show-job-details hn-id]))
-    (:job-collapse-all db)))
+              (take @(rfr/subscribe [:job-display-max])
+                (job-list-sort @(rfr/subscribe [:jobs-filtered])))))]))
 
 (defn job-details []
   (fn [job]
     (let [deets @(rfr/subscribe [:show-job-details (:hn-id job)])]
-      (println :building-jdeets (:hn-id job) deets)
-
       [:div {:class (if deets "slideIn" "slideOut")
              :style {:margin     "6px"
                      :background "#fff"

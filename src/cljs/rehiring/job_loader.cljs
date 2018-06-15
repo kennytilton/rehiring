@@ -1,15 +1,14 @@
 (ns rehiring.job-loader
   (:require
-    [clojure.walk :as walk]
     [rehiring.utility :as utl]
-    [rehiring.db :as rhdb]
-    [rehiring.subs :as subs]
     [re-frame.core :as rfr]
     [cljs.pprint :as pp]
     [clojure.string :as str]))
 
 ;; --- loading job data -----------------------------------------
 
+
+;;; key regexs used to decide job attributes for search filters
 
 (def internOK (js/RegExp. "internship|intern" "i"))
 (def nointernOK (js/RegExp. "no internship|no intern" "i"))
@@ -77,32 +76,44 @@
       (doseq [child (prim-seq (.-children dom))]
         (job-spec-extend spec child)))))
 
-(defn job-spec [dom]
-  ;;(println "jobid!" (.-id dom) dom)
+(defn job-spec
+  "The top-level function that takes a dom node and
+  tries to extract a job spec to drive the rest of
+  the app. Note that no job results unless the parser
+  marks :OK as true."
+  [dom]
+
   (let [spec (atom {:hn-id (.-id dom)})]
+    ;;; sometimes native dom functions return funky arrays. prim-seq converts those for CLJS
     (doseq [child (prim-seq (.-children dom))]
       (job-spec-extend spec child))
     (when (:OK @spec)
-      ;;(println :fini (dissoc @spec :body :body-search))
       @spec)))
 
 
-;;; --- dev limits -----------------------------
+;;; --- dev-time limits -----------------------------
 ;;; n.b.: these will be limits *per page*
 
 (def ATHING-PARSE-MAX 1000000)
 (def JOB-LOAD-MAX 10000)
 
-(defn jobs-collect [ifr-dom]
-  (if-let [cont-doc (.-contentDocument ifr-dom)]
+;;; --- main function to scrape jobs from one month page ---------------------------
+(defn jobs-collect
+  "Collect jobs for one HN page loaded into
+  an iframe. Note that a direct API is on the way
+  that will obviate the need for all this.
+
+  Note also that HN breaks up the WH jobs into multiple pages
+  as they see fit, so one month may require several such pages
+  being loaded/parsed."
+  [ifr-dom]
+
+  (when-let [cont-doc (.-contentDocument ifr-dom)]
     (let [hn-body (aget (.getElementsByTagName cont-doc "body") 0)]
-      (let [things (take ATHING-PARSE-MAX (prim-seq (.querySelectorAll hn-body ".athing")))]
-        (println :athings (count things))
-        (let [jobs (filter #(:OK %) (map job-spec things))]
-          (println :ok-jobs (count jobs))
-          (set! (.-innerHTML hn-body) "")
-          (take JOB-LOAD-MAX jobs))))
-    []))                                                    ;; todo need to force []?
+      (let [things (take ATHING-PARSE-MAX (prim-seq (.querySelectorAll hn-body ".athing")))
+            jobs (filter #(:OK %) (map job-spec things))]
+          (set! (.-innerHTML hn-body) "") ;; free up memory
+          (take JOB-LOAD-MAX jobs)))))
 
 (rfr/reg-event-db :month-set
   (fn [db [_ month-hn-id]]
@@ -110,20 +121,25 @@
       (println :month-set month-hn-id)
       (assoc db
         :month-hn-id month-hn-id
-        :page-scrapes {}                                    ;; key url, value jobs
+        :page-scrapes {}
+        ;; clear page scrapes from prior load
+        ;; dictionary key will be the url scraped, the value the jobs
+        ;; when page-scrapes has a key for every 'urls-to-scrape' (see next), the month is loaded
         ))))
 
 (rfr/reg-sub :urls-to-scrape
+  ;; fell into a convention of:
+  ;;  one directory per month, named after the HN message ID of the question
+  ;;  when multiple pages in play, have 1.html, 2.html, etc corresponding to the "p" parameter used to curl it
+  ;;  when all jobs are in one page, store as <same-message-id>.html
+  ;; No good reason for all that.
+  ;; Finally: index.html defines gMonthlies to define the data available at run-time
+  ;;
   (fn [__]
     [(rfr/subscribe [:month-hn-id])])
 
   (fn [[month-hn-id]]
-    ;; when page-scrapes has a key for every urls-to-scrape, the month is loaded
     (let [mo-def (utl/get-monthly-def month-hn-id)]
-      (println :queueing-page-loads month-hn-id mo-def)
-      ;; we start with a dictionary of loading tasks keyed by the file URLs to be loaded
-      ;; when all tasks have the initial :unloaded token replaced (by a vector of jobs), the derived
-      ;; :month-jobs sub will take on its value by concat-ing them all
       (if (pos? (:pgCount mo-def))
         (map (fn [pg-offset]
                ;; files are numbered off-by-one to match the page param on HN
@@ -138,22 +154,24 @@
   (fn [src-url]
     [:iframe {:src     src-url
               :on-load #(let [ifr (.-target %)]
-                          (println "HN Jobs Page IFrame Loaded!!" src-url)
+                          ;; bam. all in one shot. Next up on "do list" is kicking off
+                          ;; todo scraping in small chunks updating progress bar
                           (rfr/dispatch [:month-page-scraped src-url (jobs-collect ifr)]))}]))
 
 (rfr/reg-event-db :month-page-scraped
   (fn [db [_ url jobs]]
-    (println :scraped! url (count jobs))
     (assoc-in db [:page-scrapes url] jobs)))
 
 ;;; --- month loading ----------------------------------------------------------
 
-(defn job-listing-loader []
+(defn job-listing-loader
+  "The main player in loading a month. It spawns one child per URL to
+  be scraped.
+  "
+  []
   (fn []
     [:div {:style {:display "none"}}
-     (let [month-id @(rfr/subscribe [:month-hn-id])
-           page-urls @(rfr/subscribe [:urls-to-scrape])]
-       (println :job-listing-loader-sees-urls month-id page-urls)
+     (let [page-urls @(rfr/subscribe [:urls-to-scrape])]
        (doall
          (map (fn [url]
                 (println :mk-pageloader url)
@@ -172,18 +190,15 @@
 
   ;; compute
   (fn [[urls scrapes]]
-    (println :mojobs-sees urls (keys scrapes))
-
     (when (and (pos? (count scrapes))
                (= (count urls) (count scrapes)))
       (loop [[s & more] (vals scrapes)
-             cum (first (vals scrapes))
-             seen (into #{} (map :hn-id (first (vals scrapes))))
-             ]
+             unique (first (vals scrapes))
+             seen (into #{} (map :hn-id unique))]
         (if (nil? s)
-          cum
+          unique
           (let [new (remove (fn [j] (contains? seen (:hn-id j))) s)]
-            (recur more (concat cum new) (clojure.set/union seen (into #{} (map :hn-id new))))))))))
+            (recur more (concat unique new) (clojure.set/union seen (into #{} (map :hn-id new))))))))))
 
 ;;; --- UI: month selecting by user ------------------------------------------
 

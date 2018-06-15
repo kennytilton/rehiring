@@ -18,7 +18,6 @@
 (defn unote->local-storage
   [unote]
   (let [nkey (str utl/ls-key "-unotes-" (:hn-id unote))]
-    (println :storing-unote (:hn-id unote) nkey unote)
     (.setItem js/localStorage nkey (str unote))))
 
 ;;; --- re-frame-ese ---------------------------------
@@ -34,12 +33,10 @@
 (rfr/reg-sub :unotes-prop
   ;; signal fn
   (fn [[_ hn-id prop] _]
-    ;;(println :sigpropu hn_id prop)
     (subscribe [:unotes hn-id]))
 
   ;; compute
   (fn [unotes [_ id prop]]
-    ;(println :bam-prop id prop (get unotes prop) unotes)
     (get unotes prop)))
 
 (rfr/reg-event-fx :unotes-prop-toggle
@@ -58,7 +55,6 @@
 
 (rfr/reg-event-fx :persist-unote
   (fn [cfx [_ hn-id unotes]]
-    (println :persisting!!!!-unote hn-id unotes)
     (unote->local-storage unotes)))
 
 ;;; --- components -----------------------------------
