@@ -7,24 +7,26 @@ If yer just lookin' for work, a live version is [hosted here](https://kennytilto
 ## Development Mode
 
 ### Grab HN Pages
-The app runs off pages curl'ed when you decide straight from the HN server. We start by visiting HN and tracking down the "Who Is Hiring?" question under `AskHN`. Here is [June, 2018](https://news.ycombinator.com/item?id=17205865). Now checkout the browser URL:
+The app runs off pages curl'ed straight from the HN server. So they get out of date (but see below for the script I created to run indefinitely at a specified interval to refresh them).
+
+To grab a page we need the message ID of the actual "Who is hiring" question. We start by visiting HN and tracking down the "Who Is Hiring?" question under `AskHN`. Here is [June, 2018](https://news.ycombinator.com/item?id=17205865). Now checkout the browser URL:
 ````
 https://news.ycombinator.com/item?id=17205865
 ````
 The browser app lives and breathes that `17205865`.
 
-Now we want to pull 1-N pages under that ID, because when the list gets big HN breaks up the page into multiples keyed by a simple `p` parameter. Here is what we curl to get page 2:
+Now we want to pull 1-N pages under that ID because, when the list gets big, HN breaks up the page into multiple pages keyed by a simple `p` parameter. Here is what we curl to get page 2:
 ````
 https://news.ycombinator.com/item?id=17205865&p=2
 ````
-To grab that:
+To automate page grabbing I cobbled together a neophyte's bash script we invoke like this (but read on for important prior steps):
 ````bash
 cd rehiring
 ./grab 17205865
 ````
 An optional second parameter tells the script to wait that many minutes and refresh, until control-C'ed.
 
-If we curl too high a `p` (by setting MAX_P too high) we just get the latest, so I have not figured out a way to script a loop that stops whwn it has them all. So <sob> I edit the `grab` shell script and look for:
+I mentioned a prior step. There is no way to know how many pages to scrape, but there is no harm other than wasted bandwidth in guessing high: ;f we curl too high a `p` (by setting MAX_P too high) we just get the last. So <sob> I edit the `grab` shell script and look for:
 ````bash
 MAX_P=3
 ````
@@ -39,7 +41,7 @@ MAX_P=3
     rehiring.core.init();
    </script>
 ````
-Edit reasonably. The one mistake you can make (blame IFRAME!) is having a `pgCount` higher than the number of pages available: the app will wait for all pages to load but the extras of course will not load and using a JS timer to decide when to give up is left as an exercise. (No, IFRAMEs offer no error.)
+Edit reasonably. The one mistake you can make (blame IFRAME!) is having a `pgCount` higher than the number of pages available: the app will wait for all pages to load but the extras of course will not load and using a JS timer to decide when to give up is left as an exercise. (No, IFRAMEs offer no error to work from if a URL would normally 404.)
 
 Now your copy of the app should work with any new content you specify in `index.html`.
 
