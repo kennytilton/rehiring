@@ -5,9 +5,7 @@
             [re-frame.core :as rfr]
             [rehiring.regex-search :as rgx]))
 
-
-
-;;; --- sort bar -----------------------------------------------------------
+;;; --- job sort bar -----------------------------------------------------------
 
 (defn sort-bar []
   (fn []
@@ -17,26 +15,29 @@
      [:span {:style {:margin-right "6px"}} "Sort by:"]
      [:ul {:style (merge utl/hz-flex-wrap
                     {:list-style "none"
-                     :padding    0 :margin 0})}
-      (let [curr-sort @(rfr/subscribe [:job-sort])]
-        (map (fn [jsort]
+                     :padding    0
+                     :margin     0})}
+      (map (fn [jsort]
              (let [{:keys [title]} jsort]
                ^{:key title}
-               [:li
-                [:button.sortOption
-                 {:style    {:color (if (= title (:title curr-sort))
-                                      "blue" "#222")}
-                  :selected (= jsort curr-sort)
-                  :on-click #(if (= title (:title curr-sort))
-                               (rfr/dispatch [:job-sort-set (update curr-sort :order (fn [oo]
-                                                                                       #_ (println :oo oo)
-                                                                                       (* -1 oo)))])
-                               (rfr/dispatch [:job-sort-set jsort]))}
-                 (str (:title jsort) (if (= title (:title curr-sort))
-                                       (if (= (:order curr-sort) -1)
-                                         (utl/unesc "&#x2798") (utl/unesc "&#x279a"))))]]))
-        utl/job-sorts))
+               [:li [sort-bar-option jsort]]))
+        utl/job-sorts)
       ]]))
+
+(defn sort-bar-option []
+  (fn [{:keys [title] :as jsort}]
+    (let [curr-sort @(rfr/subscribe [:job-sort])]
+      [:button.sortOption
+       {:style    {:color (if (= title (:title curr-sort))
+                            "blue" "#222")}
+        :selected (= jsort curr-sort)
+        :on-click (fn []
+                    (if (= title (:title curr-sort))
+                      (rfr/dispatch [:job-sort-set (update curr-sort :order #(* -1 %))])
+                      (rfr/dispatch [:job-sort-set jsort])))}
+       (str (:title jsort) (if (= title (:title curr-sort))
+                             (if (= (:order curr-sort) -1)
+                               (utl/unesc "&#x2798") (utl/unesc "&#x279a"))))])))
 
 ;;; --- the beef -----------------------------------------------------
 

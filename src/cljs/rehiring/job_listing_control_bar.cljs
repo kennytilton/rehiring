@@ -20,19 +20,19 @@
 
 (defn excluded-count []
   (fn []
-    (let [excluded @(rfr/subscribe [:jobs-filtered-excluded])]
+    (let [excluded-ct @(rfr/subscribe [:jobs-filtered-excluded-ct])]
       [:span {:style    {:padding-bottom "4px"
                          :cursor         "pointer"
                          :display        "flex"
                          :align-items    "center"
                          :font-size      "1em"
-                         :visibility     (if (pos? (count excluded)) "visible" "hidden")
+                         :visibility     (if (pos? excluded-ct) "visible" "hidden")
                          :border         (if @(rfr/subscribe [:show-filtered-excluded])
                                            "thin solid red" "none")
                          :title          "Show/hide items you have excluded"}
               :on-click #(rfr/dispatch [:show-filtered-excluded-toggle])
               }
-       (str (utl/unesc "&#x20E0;") ": " (count excluded))])))
+       (str (utl/unesc "&#x20E0;") ": " excluded-ct)])))
 
 (defn result-max []
   (fn []
@@ -46,7 +46,7 @@
                                  (rfr/dispatch [:set-result-display-max (js/parseInt (.-value (.-target %)))]))
 
                 :on-blur      #(let [new (.-value (.-target %))]
-                                 #_ (println "blur new" new (js/parseInt new))
+                                 #_(println "blur new" new (js/parseInt new))
                                  (rfr/dispatch [:set-result-display-max (js/parseInt new)]))
 
                 :style        {:font-size    "1em"
@@ -60,16 +60,16 @@
 (defn job-listing-control-bar []
   (fn []
     [:div {:class "listingControlBar"}
-       [:div {:style utl/hz-flex-wrap-centered}
-        ;;; --- match count---------------------------------------------------
-        [:span {:style {:font-size    "1em"
-                        :margin-right "12px"}}
-         (let [jobs @(rfr/subscribe [:jobs-filtered])]
-           (str "Jobs: " (count jobs)))]
+     [:div {:style utl/hz-flex-wrap-centered}
+      ;;; --- match count---------------------------------------------------
+      [:span {:style {:font-size    "1em"
+                      :margin-right "12px"}}
+       (let [jobs @(rfr/subscribe [:jobs-filtered])]
+         (str "Jobs: " (count jobs)))]
 
-        [excluded-count]]
-       [result-max]
-       [job-expansion-control]]))
+      [excluded-count]]
+     [result-max]
+     [job-expansion-control]]))
 
 ;;; --- reframe plumbing ------------------------------------------------
 
@@ -96,16 +96,15 @@
                                           "expand" "collapse")
                  :show-job-details      new-deets}))))
 
-(rfr/reg-sub :jobs-filtered-excluded
+(rfr/reg-sub :jobs-filtered-excluded-ct
   ;
-  ; This is weird. jobs-filtered includes excluded jobs so we can let
+  ; This is tricky. jobs-filtered includes excluded jobs (!) so we can let
   ; the user show/hide them while browsing a selection. Kinda like when
   ; we search gmail and it says "10 found, 3 more in trash". Sooo...
   ;
   ; This subscription provides the info needed to inform users
   ; how many jobs matched by their search are hidden
-  ; because the user has excluded them. Indeed, we might even be able
-  ; to have this do no more than compute the count.
+  ; because the user has excluded them.
   ;
   ;; signal fn
   (fn [query-v _]
@@ -114,7 +113,7 @@
 
   ;; compute
   (fn [[jobs-filtered user-notes]]
-    #_ (println :jfilex-sees (count jobs-filtered) (count user-notes))
-    (filter (fn [j]
-              (get-in user-notes [(:hn-id j) :excluded]))
-      jobs-filtered)))
+    #_(println :jfilex-sees (count jobs-filtered) (count user-notes))
+    (count (filter (fn [j]
+                     (get-in user-notes [(:hn-id j) :excluded]))
+             jobs-filtered))))
