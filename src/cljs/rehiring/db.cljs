@@ -6,7 +6,7 @@
 (def INITIAL-SEARCH-MO-IDX 1)                               ;; handy when debugging specific month
 
 (defn initial-db []
-  (merge (utl/unprocessed-month "16967543") ;;(:hnId (nth js/gMonthlies js/initialSearchMoIdx)))
+  (merge (utl/unprocessed-month (:hnId (nth (utl/gMonthlies-cljs) js/initialSearchMoIdx)))
     {:job-collapse-all       false
      :toggle-details-action  "expand"
      :job-display-max        42

@@ -25,7 +25,6 @@
   "The main player in loading a month. It spawns one child loader whenever there is a URL to be scraped."
   []
   (fn []
-    (println :jll-building!)
     [:div                                                   ;; {:style {:display "none"}}
      (if-let [page-url (first @(rfr/subscribe [:urls-to-scrape]))]
        ;; once the potential job nodes have been scraped and saved
@@ -45,7 +44,7 @@
 ;;; --- dev-time limits -----------------------------
 ;;; n.b.: these will be limits *per page*
 
-(def ATHING-PARSE-MAX 10)
+(def ATHING-PARSE-MAX 500)
 (def JOB-LOAD-MAX 10000)                                    ;; todo: still needed?
 
 (defn job-page-athings [ifr-dom]
@@ -57,7 +56,7 @@
 
 (rfr/reg-event-fx :page-athings-culled
   (fn [{:keys [db]} [_ athings]]
-    (println :culled! (count athings) (:urls-to-scrape db))
+    (println :culled! (count athings)  :known (count (:month-athings db))(:urls-to-scrape db))
 
     (let [out (merge
                 {:db (reduce (fn [db op]                    ;; todo make this a utiity
@@ -65,10 +64,10 @@
                        db [[:month-athings concat athings]
                            [:urls-to-scrape rest]])         ;; this kicks off jll to make a new iframe
                  }
-                (when (nil? (rest (:urls-to-scrape db)))
+                (when (empty? (rest (:urls-to-scrape db)))
+                  (println :dispatching-cull-jobs)
                   {:dispatch [:cull-jobs-from-athings]}))]
-      (println :ot-keys (keys out))
-      (println :culled-out (select-keys (:db out) [:month-hn-id :urls-to-scrape ]))
+      ;; (println :culled-out (select-keys (:db out) [:month-hn-id :urls-to-scrape ]))
       out)))
 
 ;;; --- OK, all athings are loaded ----------------------
@@ -80,13 +79,16 @@
 
 (rfr/reg-event-fx :cull-jobs-from-athings
   (fn [{:keys [db]} [_]]
-    (let [chunk (subvec (:month-athings db) 0 ATHING_CHUNK_SZ)]
+    ;(println :cull-jobs-sees (type (:month-athings db)))
+    ;(println :cull-jobs-sees (count (:month-athings db)))
+    (let [chunk (take ATHING_CHUNK_SZ (:month-athings db))]
+      ;(println :jchunk (count chunk))
       (if (seq chunk)
         (do (println :cull-job-chunk (count chunk))
             {:db       (reduce (fn [db op]
                                  (apply update db op))
                          db [[:month-jobs concat (filter #(:OK %) (map parse/job-parse chunk))]
-                             [:month-athings subvec ATHING_CHUNK_SZ]])
+                             [:month-athings nthrest ATHING_CHUNK_SZ]])
              :dispatch [:cull-jobs-from-athings]})
         (do (println :athings-exhausted)
             {:db (assoc db :month-jobs-parsed true)})))))
