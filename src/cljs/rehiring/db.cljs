@@ -1,12 +1,11 @@
 (ns rehiring.db
   (:require [clojure.string :as str]
             [re-frame.core :as rfr]
-            [rehiring.utility :as utl]))
-
-(def INITIAL-SEARCH-MO-IDX 1)                               ;; handy when debugging specific month
+            [rehiring.utility :as utl]
+            [rehiring.month-loader :as loader]))
 
 (defn initial-db []
-  (merge (utl/unprocessed-month (:hnId (nth (utl/gMonthlies-cljs) js/initialSearchMoIdx)))
+  (merge
     {:job-collapse-all       false
      :toggle-details-action  "expand"
      :job-display-max        42
@@ -18,26 +17,6 @@
      :search-history         {}
      :show-job-details       {}}))
 
-(defn io-all-keys []
-  (.keys js/Object (.-localStorage js/window)))
-
-(defn ls-get-wild
-  "Loads all localStorage values whose key begins with
-  prefix into a dictionary, using the rest of the LS key
-   as the dictionary key."
-  [prefix]
-
-  (into {}
-    (remove nil?
-      (for [lsk (io-all-keys)]
-        (when (and (str/starts-with? lsk prefix)
-                   ;; ugh, we got some garbage in LS
-                   ;; may as well create permanent filter
-                   (> (count lsk) (count prefix)))
-          [(subs lsk (count prefix))                        ;; toss prefix
-           (cljs.reader/read-string
-             (.getItem js/localStorage lsk))])))))
-
 (rfr/reg-cofx :storage-user-notes
   ;; load user notes from local storage
   ;; todo: name rectification
@@ -46,14 +25,16 @@
   ;; of notes on *one job*. "user-notes" are the collection of "unotes".
   ;;
   (fn [cofx _]
-    (let [notes (ls-get-wild (str utl/ls-key "-unotes-"))]
-      (assoc cofx
-        :storage-user-notes
-        (ls-get-wild (str utl/ls-key "-unotes-"))))))
+    (assoc cofx
+      :storage-user-notes
+      (utl/ls-get-wild (str utl/ls-key "-unotes-")))))
 
 (rfr/reg-event-fx ::initialize-db
   [(rfr/inject-cofx :storage-user-notes)]
 
   (fn [{:keys [storage-user-notes]} _]
-    {:db (assoc (initial-db) :user-notes storage-user-notes)}))
+    (merge
+      {:db (assoc (initial-db) :user-notes storage-user-notes)}
+      (when-let [initial-month (nth (loader/gMonthlies-cljs) js/initialSearchMoIdx)]
+        {:dispatch [:month-set (:hnId initial-month)]}))))
 

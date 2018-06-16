@@ -2,43 +2,39 @@
   (:require
     [goog.string :as gs]
     [re-frame.core :as rfr]
-    [clojure.walk :as walk]
-    [cljs.pprint :as pp]))
+    [clojure.string :as str]))
+
+;;; --- clojure++ ---------------------------------
+
+(defn update-multi [in-map & ops]
+  (reduce (fn [in-map op]
+            (apply update in-map op))
+    in-map ops))
+
+;;; --- local-store --------------------------------
 
 (def ls-key "rehiring-browser")                             ;; localstore key
 
-(defn gMonthlies-cljs []
-  ;; gMonthlies defined in index.html for extensibility
-  (walk/keywordize-keys (js->clj js/gMonthlies)))
+(defn io-all-keys []
+  (.keys js/Object (.-localStorage js/window)))
 
-(defn get-monthly-def [hn-id]
-  (some (fn [mo]
-          (println :get-mo hn-id (type hn-id) (type (:hnId mo)))
-          (when (= (:hnId mo) hn-id)
-            (println :mo-bam mo)
-            mo))
-    (gMonthlies-cljs)))
+(defn ls-get-wild
+  "Loads all localStorage values whose key begins with
+  prefix into a dictionary, using the rest of the LS key
+   as the dictionary key."
+  [prefix]
 
-(defn unprocessed-month [month-hn-id]
-  {:month-hn-id   month-hn-id                               ;; triggers whole load process
-   ;;; --- first, compute the resource file URLs to be scraped ---------------
+  (into {}
+    (remove nil?
+      (for [lsk (io-all-keys)]
+        (when (and (str/starts-with? lsk prefix)
+                   ;; ugh, we got some garbage in LS
+                   ;; may as well create permanent filter
+                   (> (count lsk) (count prefix)))
+          [(subs lsk (count prefix))                        ;; toss prefix
+           (cljs.reader/read-string
+             (.getItem js/localStorage lsk))])))))
 
-   :urls-to-scrape (let [urls (when month-hn-id
-                                (println :mo month-hn-id)
-                    (if-let [mo-def (get-monthly-def month-hn-id)] ;; hard-coded table in index.html
-                      (do (println :def mo-def)
-                      (map (fn [pg-offset]
-                             ;; files are numbered off-by-one to match the page param on HN
-                             (pp/cl-format nil "files/~a/~a.html" month-hn-id (inc pg-offset)))
-                        (range (:pgCount mo-def))))
-                      (throw (js/Exception. (str "msg id " month-hn-id " not defined in gMonthlies table.")))))]
-                     (println :scraping urls)
-                     urls)
-
-   :month-athings []                                        ;; first we grab all nodes from all pages, to decide "max" of HTML progress element
-   :job-ids-seen  #{}                                       ;; de-duper (pulling extra pages keeps returning the last)
-   :month-jobs    []                                        ;; end result
-   })
 
 ;;; --- handy CSS --------------------------------------------
 

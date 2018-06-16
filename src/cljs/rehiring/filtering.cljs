@@ -23,13 +23,12 @@
 
 (reg-sub :month-jobs
   (fn [db]
-    (:month-jobs db)))
+    (get-in db [:month-load-task :jobs])))
 
 (rfr/reg-sub :jobs-filtered
   ;; signal fn
   (fn [query-v _]
-    [(subscribe [:month-jobs-parsed])
-     (subscribe [:month-jobs])
+    [(subscribe [:month-jobs])
      (subscribe [:user-notes])
      (subscribe [:filter-active-all])
      (subscribe [:rgx-tree :title])
@@ -37,24 +36,23 @@
      ])
 
   ;; compute
-  (fn [[jobs-parsed jobs user-notes filters title-rgx-tree full-rgx-tree]]
-    (when jobs-parsed
-      (filter (fn [j]
-                (let [unotes (get user-notes (:hn-id j))]
-                  (and (or (not (get filters "REMOTE")) (:remote j))
-                       (or (not (get filters "ONSITE")) (:onsite j))
-                       (or (not (get filters "INTERNS")) (:interns j))
-                       (or (not (get filters "VISA")) (:visa j))
-                       (or (not (get filters "Excluded")) (:excluded unotes))
-                       (or (not (get filters "Noted")) (pos? (count (:notes unotes))))
-                       (or (not (get filters "Applied")) (:applied unotes))
-                       (or (not (get filters "Starred")) (pos? (:stars unotes)))
-                       (or (not title-rgx-tree) (rgx-tree-match (:title-search j) title-rgx-tree))
-                       (or (not full-rgx-tree) (or
-                                                 (rgx-tree-match (:title-search j) full-rgx-tree)
-                                                 (rgx-tree-match (:body-search j) full-rgx-tree)))
-                       )))
-        jobs))))
+  (fn [[jobs user-notes filters title-rgx-tree full-rgx-tree]]
+    (filter (fn [j]
+              (let [unotes (get user-notes (:hn-id j))]
+                (and (or (not (get filters "REMOTE")) (:remote j))
+                     (or (not (get filters "ONSITE")) (:onsite j))
+                     (or (not (get filters "INTERNS")) (:interns j))
+                     (or (not (get filters "VISA")) (:visa j))
+                     (or (not (get filters "Excluded")) (:excluded unotes))
+                     (or (not (get filters "Noted")) (pos? (count (:notes unotes))))
+                     (or (not (get filters "Applied")) (:applied unotes))
+                     (or (not (get filters "Starred")) (pos? (:stars unotes)))
+                     (or (not title-rgx-tree) (rgx-tree-match (:title-search j) title-rgx-tree))
+                     (or (not full-rgx-tree) (or
+                                               (rgx-tree-match (:title-search j) full-rgx-tree)
+                                               (rgx-tree-match (:body-search j) full-rgx-tree)))
+                     )))
+      jobs)))
 
 ;;; --- the filtering interface ------------------------------------------------------
 

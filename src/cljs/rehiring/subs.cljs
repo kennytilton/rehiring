@@ -4,15 +4,11 @@
 
 (reg-sub :month-hn-id
  (fn [db]
-   (:month-hn-id db)))
+   (get-in db [:month-load-task :month-hn-id])))
 
 (reg-sub :job-sort
   (fn [db]
     (:job-sort db)))
-
-(reg-sub :urls-to-scrape
-  (fn [db]
-    (:urls-to-scrape db)))
 
 (reg-sub :show-job-details
   (fn [db [_ hn-id]]

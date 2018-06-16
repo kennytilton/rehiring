@@ -74,13 +74,13 @@
   tries to extract a job spec to drive the rest of
   the app. Note that no job results unless the parser
   marks :OK as true."
-  [dom]
-
-  (let [spec (atom {:hn-id (.-id dom)})]
-    ;;; sometimes native dom functions return funky arrays. prim-seq converts those for CLJS
-    (doseq [child (prim-seq (.-children dom))]
-      (job-parse-extend spec child))
-    (when (:OK @spec)
-      @spec)))
+  [dom seen]
+  (when-not (contains? seen (.-id dom))
+    (let [spec (atom {:hn-id (.-id dom)})]
+      ;;; sometimes native dom functions return funky arrays. prim-seq converts those for CLJS
+      (doseq [child (prim-seq (.-children dom))]
+        (job-parse-extend spec child))
+      (when (:OK @spec)
+        @spec))))
 
 
