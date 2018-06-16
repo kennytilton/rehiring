@@ -2,7 +2,8 @@
   (:require
     [goog.string :as gs]
     [re-frame.core :as rfr]
-    [clojure.walk :as walk]))
+    [clojure.walk :as walk]
+    [cljs.pprint :as pp]))
 
 (def ls-key "rehiring-browser")                             ;; localstore key
 
@@ -17,6 +18,27 @@
             (println :mo-bam mo)
             mo))
     (gMonthlies-cljs)))
+
+(defn unprocessed-month [month-hn-id]
+  {:month-hn-id   month-hn-id                               ;; triggers whole load process
+   ;;; --- first, compute the resource file URLs to be scraped ---------------
+
+   :urls-to-scrape (let [urls (when month-hn-id
+                                (println :mo month-hn-id)
+                    (if-let [mo-def (get-monthly-def month-hn-id)] ;; hard-coded table in index.html
+                      (do (println :def mo-def)
+                      (map (fn [pg-offset]
+                             ;; files are numbered off-by-one to match the page param on HN
+                             (pp/cl-format nil "files/~a/~a.html" month-hn-id (inc pg-offset)))
+                        (range (:pgCount mo-def))))
+                      (throw (js/Exception. (str "msg id " month-hn-id " not defined in gMonthlies table.")))))]
+                     (println :scraping urls)
+                     urls)
+
+   :month-athings []                                        ;; first we grab all nodes from all pages, to decide "max" of HTML progress element
+   :job-ids-seen  #{}                                       ;; de-duper (pulling extra pages keeps returning the last)
+   :month-jobs    []                                        ;; end result
+   })
 
 ;;; --- handy CSS --------------------------------------------
 

@@ -10,6 +10,10 @@
   (fn [db]
     (:job-sort db)))
 
+(reg-sub :urls-to-scrape
+  (fn [db]
+    (:urls-to-scrape db)))
+
 (reg-sub :show-job-details
   (fn [db [_ hn-id]]
     (get-in db [:show-job-details hn-id])))

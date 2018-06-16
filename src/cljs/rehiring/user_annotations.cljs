@@ -69,8 +69,8 @@
          ^{:key sn} [:span {:style    {:cursor "pointer"
                                        :color  (if (>= j-stars (inc sn)) "red" "gray")}
                             :on-click (fn [e]
-                                        #_ (println :bamchg-stars
-                                          sn (.-checked (.-target e)))
+                                        #_(println :bamchg-stars
+                                            sn (.-checked (.-target e)))
                                         (rfr/dispatch [:unotes-prop-set (:hn-id job) :stars
                                                        (if (= sn (dec j-stars))
                                                          0 (inc sn))]))}
@@ -83,9 +83,9 @@
        [:input {:id        input-id
                 :type      "checkbox"
                 :style     {:margin-left "18px"}
-                :checked     @(rfr/subscribe [:unotes-prop (:hn-id job) :applied])
-                :on-change #(do ;;(println :applied-change!!!!! (.-value (.-target %)))
-                                (rfr/dispatch [:unotes-prop-toggle (:hn-id job) :applied]))
+                :checked   @(rfr/subscribe [:unotes-prop (:hn-id job) :applied])
+                :on-change #(do                             ;;(println :applied-change!!!!! (.-value (.-target %)))
+                              (rfr/dispatch [:unotes-prop-toggle (:hn-id job) :applied]))
                 }]
        [:label {:for   input-id
                 :style {:color (if @(rfr/subscribe [:unotes-prop (:hn-id job) :applied])

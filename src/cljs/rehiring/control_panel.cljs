@@ -7,23 +7,6 @@
 
 ;;; --- job sort bar -----------------------------------------------------------
 
-(defn sort-bar []
-  (fn []
-    [:div {:style {:padding 0
-                   :margin  "15px 0 0 24px"
-                   :display "flex"}}
-     [:span {:style {:margin-right "6px"}} "Sort by:"]
-     [:ul {:style (merge utl/hz-flex-wrap
-                    {:list-style "none"
-                     :padding    0
-                     :margin     0})}
-      (map (fn [jsort]
-             (let [{:keys [title]} jsort]
-               ^{:key title}
-               [:li [sort-bar-option jsort]]))
-        utl/job-sorts)
-      ]]))
-
 (defn sort-bar-option []
   (fn [{:keys [title] :as jsort}]
     (let [curr-sort @(rfr/subscribe [:job-sort])]
@@ -38,6 +21,22 @@
        (str (:title jsort) (if (= title (:title curr-sort))
                              (if (= (:order curr-sort) -1)
                                (utl/unesc "&#x2798") (utl/unesc "&#x279a"))))])))
+
+(defn sort-bar []
+  (fn []
+    [:div {:style {:padding 0
+                   :margin  "15px 0 0 24px"
+                   :display "flex"}}
+     [:span {:style {:margin-right "6px"}} "Sort by:"]
+     [:ul {:style (merge utl/hz-flex-wrap
+                    {:list-style "none"
+                     :padding    0
+                     :margin     0})}
+      (map (fn [jsort]
+             (let [{:keys [title]} jsort]
+               ^{:key title}
+               [:li [sort-bar-option jsort]]))
+        utl/job-sorts)]]))
 
 ;;; --- the beef -----------------------------------------------------
 

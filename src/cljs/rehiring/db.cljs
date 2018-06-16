@@ -1,16 +1,13 @@
 (ns rehiring.db
-  (:require [clojure.walk :as walk]
+  (:require [clojure.string :as str]
             [re-frame.core :as rfr]
-            [clojure.string :as str]
             [rehiring.utility :as utl]))
 
 (def INITIAL-SEARCH-MO-IDX 1)                               ;; handy when debugging specific month
 
 (defn initial-db []
-  (let [months (utl/gMonthlies-cljs)]
-    {;; :months                months
-     :month-hn-id            (:hnId (nth months js/initialSearchMoIdx))
-     :job-collapse-all       false
+  (merge (utl/unprocessed-month "16967543") ;;(:hnId (nth js/gMonthlies js/initialSearchMoIdx)))
+    {:job-collapse-all       false
      :toggle-details-action  "expand"
      :job-display-max        42
      :job-sort               (nth utl/job-sorts 0)
@@ -19,8 +16,7 @@
      :rgx-match-case         false
      :rgx-xlate-or-and       true
      :search-history         {}
-     :show-job-details       {}
-     }))
+     :show-job-details       {}}))
 
 (defn io-all-keys []
   (.keys js/Object (.-localStorage js/window)))
