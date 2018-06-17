@@ -2,7 +2,7 @@
   (:require
    [reagent.core :as reagent]
    [re-frame.core :as re-frame]
-   [rehiring.app :as views]
+   [rehiring.main-view :as views]
    [rehiring.config :as config]
    [rehiring.db :as db]
    ))
