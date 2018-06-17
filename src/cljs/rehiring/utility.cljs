@@ -35,6 +35,8 @@
            (cljs.reader/read-string
              (.getItem js/localStorage lsk))])))))
 
+(defn target-val [e]
+  (.-value (.-target e)))
 
 ;;; --- handy CSS --------------------------------------------
 

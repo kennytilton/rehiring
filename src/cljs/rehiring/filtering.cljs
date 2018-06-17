@@ -21,10 +21,6 @@
                         (boolean (re-find andx text))))
               ands))) tree))
 
-(reg-sub :month-jobs
-  (fn [db]
-    (get-in db [:month-load-task :jobs])))
-
 (rfr/reg-sub :jobs-filtered
   ;; signal fn
   (fn [query-v _]
