@@ -48,50 +48,32 @@
   (fn [db]
     (get-in db [:month-load-task :page-url-count])))
 
-(rfr/reg-sub :month-pages-remaining
-  (fn [db]
-    (get-in db [:month-load-task :page-urls-remaining])))
+;(rfr/reg-sub :month-pages-remaining
+;  (fn [db]
+;    (get-in db [:month-load-task :page-urls-remaining])))
 
 (rfr/reg-sub :month-jobs
   (fn [db]
     (get-in db [:month-load-task :jobs])))
 
-;(rfr/reg-sub :month-load-task-size
-;  (fn [db]
-;    (count (get-in db [:month-load-task :athings]))))
-;
-;(rfr/reg-sub :month-load-task-job-count
-;  (fn [db]
-;    (count (get-in db [:month-load-task :jobs]))))
 
 (rfr/reg-sub :month-progress-max
   (fn [[_] _]
-    [(rfr/subscribe [:month-phase]) (rfr/subscribe [:month-athings]) (rfr/subscribe [:month-page-count])])
-  (fn [[phase athings page-count]]
-    (println :compute-max phase)
-    (if (= :cull-athings phase)
-      page-count
-      (count athings))))
+    [(rfr/subscribe [:month-load-task])])
+  (fn [[task]]
+    (println :compute-max (:phase task))
+    (if (= :cull-athings (:phase task))
+      (:page-url-count task)
+      (count (:athings task)))))
 
 (rfr/reg-sub :month-progress-made
   (fn [[_] _]
-    [(rfr/subscribe [:month-phase]) (rfr/subscribe [:month-athings]) (rfr/subscribe [:month-page-count])
-     (rfr/subscribe [:month-pages-remaining])(rfr/subscribe [:month-jobs])])
-  (fn [[phase athings page-count pg-rem jobs]]
-    (println :compute-progress phase page-count pg-rem)
-    (if (= :cull-athings phase)
-      (- page-count (count pg-rem))
-      (count jobs))))
-
-(rfr/reg-sub :month-progress-made
-  (fn [[_] _]
-    [(rfr/subscribe [:month-phase]) (rfr/subscribe [:month-athings]) (rfr/subscribe [:month-page-count])
-     (rfr/subscribe [:month-pages-remaining])(rfr/subscribe [:month-jobs])])
-  (fn [[phase athings page-count pg-rem jobs]]
-    (println :compute-progress phase page-count pg-rem)
-    (if (= :cull-athings phase)
-      (- page-count (count pg-rem))
-      (count jobs))))
+    [(rfr/subscribe [:month-load-task])])
+  (fn [[task]]
+    (println :compute-progress (:phase task))
+    (if (= :cull-athings (:phase task))
+      (- (:page-url-count task) (count (:page-urls-remaining task)))
+      (count (:jobs task)))))
 
 ;;; --- kick off month load from initilaize-db or when user selects new month (see pick-a-month) -----
 
@@ -104,22 +86,6 @@
 ;;; --- a component that loads pages into iframes and kicks off their processing ---------------------
 
 (declare mk-page-loader job-page-athings)
-
-(rfr/reg-sub :month-load-task
-  (fn [db]
-    (:month-load-task db)))
-
-(rfr/reg-sub :month-load-task
-  (fn [db]
-    (:month-load-task db)))
-
-(rfr/reg-sub :month-load-task
-  (fn [db]
-    (:month-load-task db)))
-
-(rfr/reg-sub :month-load-task
-  (fn [db]
-    (:month-load-task db)))
 
 (rfr/reg-sub :month-load-task
   (fn [db]
