@@ -1,4 +1,4 @@
-(ns rehiring.views
+(ns rehiring.app
   (:require
     [reagent.core :as rgt]
     [re-frame.core :as rfr]
@@ -6,6 +6,7 @@
     [rehiring.subs :as subs]
     [rehiring.utility :as utl]
     [rehiring.month-loader :as jld]
+    [rehiring.month-loader-views :as mlv]
     [rehiring.job-list :as jls]
     [rehiring.control-panel :as cp]
     ))
@@ -31,7 +32,7 @@
   [:div
    [app-banner]
    [:div {:style {:margin 0 :background "#ffb57d"}}
-    [jld/pick-a-month]
+    [mlv/pick-a-month]
     [jld/job-listing-loader]
     [cp/control-panel]
     [jls/job-list]]])
