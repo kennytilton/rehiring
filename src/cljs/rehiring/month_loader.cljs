@@ -40,22 +40,10 @@
   (fn [db]
     (get-in db [:month-load-task :phase])))
 
-(rfr/reg-sub :month-athings
-  (fn [db]
-    (get-in db [:month-load-task :athings])))
-
-(rfr/reg-sub :month-page-count
-  (fn [db]
-    (get-in db [:month-load-task :page-url-count])))
-
-;(rfr/reg-sub :month-pages-remaining
-;  (fn [db]
-;    (get-in db [:month-load-task :page-urls-remaining])))
 
 (rfr/reg-sub :month-jobs
   (fn [db]
     (get-in db [:month-load-task :jobs])))
-
 
 (rfr/reg-sub :month-progress-max
   (fn [[_] _]
@@ -189,9 +177,13 @@
           max @(subscribe [:month-progress-max])
           made @(subscribe [:month-progress-made])]
       (println :mk-pg-bar phase made max)
-      [:progress#pgloadprogress
+      [:div [:span (case phase
+             :cull-athings "Scrape nodes "
+             :parse-jobs "Parse jobs "
+             "")]
+       [:progress#pgloadprogress
        {:value made
-        :max   max}])))
+        :max   max}]])))
 
 
 (defn pick-a-month []
