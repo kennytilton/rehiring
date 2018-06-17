@@ -42,6 +42,10 @@
             :hidden (not @(subscribe [:month-load-complete?]))}
      (str "Total jobs: " (count @(subscribe [:month-jobs])))]))
 
+;;; -------------------------------------------------------------------
+;;; --- The star of the show ------------------------------------------
+;;; -------------------------------------------------------------------
+
 (defn month-load-progress-bar
   "A progress element preceded by a label since
   this one bar shows the progress in turn of two phases, one
@@ -70,7 +74,31 @@
         {:value made
          :max   max}]])))
 
-;;; --- the beef ------------------------------------------------------------
+;;; --- supporting subscriptions --------------------------------------
+
+(rfr/reg-sub :month-progress-max
+  (fn [[_] _]
+    [(rfr/subscribe [:month-load-task])])
+  (fn [[task]]
+    (if (= :cull-athings (:phase task))
+      (:page-url-count task)
+      (count (:athings task)))))
+
+(rfr/reg-sub :month-progress-made
+  (fn [[_] _]
+    [(rfr/subscribe [:month-load-task])])
+  (fn [[task]]
+    (if (= :cull-athings (:phase task))
+      (- (:page-url-count task) (count (:page-urls-remaining task)))
+      (count (:jobs task)))))
+
+(reg-sub :month-load-complete?
+  (fn [db]
+    (get-in db [:month-load-task :month-load-complete?])))
+
+
+;;; --- the big picture -----------------------------------------------
+;;; select a month and watch it load
 
 (defn pick-a-month []
   [:div {:class "pickAMonth"}

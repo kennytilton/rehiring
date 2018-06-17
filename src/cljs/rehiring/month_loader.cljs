@@ -72,26 +72,6 @@
   (fn [db]
     (get-in db [:month-load-task :jobs])))
 
-(rfr/reg-sub :month-progress-max
-  (fn [[_] _]
-    [(rfr/subscribe [:month-load-task])])
-  (fn [[task]]
-    (if (= :cull-athings (:phase task))
-      (:page-url-count task)
-      (count (:athings task)))))
-
-(rfr/reg-sub :month-progress-made
-  (fn [[_] _]
-    [(rfr/subscribe [:month-load-task])])
-  (fn [[task]]
-    (if (= :cull-athings (:phase task))
-      (- (:page-url-count task) (count (:page-urls-remaining task)))
-      (count (:jobs task)))))
-
-(reg-sub :month-load-complete?
-  (fn [db]
-    (get-in db [:month-load-task :month-load-complete?])))
-
 ;;; --- ACTION STARTS HERE: kick off month load  -----
 
 (rfr/reg-event-db :month-set
@@ -139,7 +119,7 @@
 ;;; --- dev-time limits -----------------------------
 ;;; n.b.: these will be limits *per page*
 
-(def ATHING-PARSE-MAX 50)
+(def ATHING-PARSE-MAX 1000)
 (def JOB-LOAD-MAX 10000)                                    ;; todo: still needed?
 
 (defn job-page-athings
