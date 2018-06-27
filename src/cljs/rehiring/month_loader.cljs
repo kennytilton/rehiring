@@ -10,7 +10,7 @@
     [rehiring.job-parse :as parse]))
 
 (defn gMonthlies-cljs
-  "gMonthlies table of contents are defined in index.html for extensibility,
+  "The gMonthlies table of contents is defined in index.html for extensibility,
   then translated here to CLJS-ese, except hnId: remains camel-case :hnId."
   []
   (walk/keywordize-keys (js->clj js/gMonthlies)))
@@ -18,11 +18,13 @@
 (defn get-monthly-def
   "Retrieve month info based on HN message Id"
   [hn-id]
-  (some #(when (= (:hnId %) hn-id) %)
+  (some (fn [month]
+          (when (= (:hnId month) hn-id)
+            month))
     (gMonthlies-cljs)))
 
 (defn month-page-urls
-  "Compute a vector URLs to be scraped, given month info
+  "Compute a vector of string URLs to be scraped, given month info
   hard-coded in index.html. Look for a script tag defining gMonthlies."
 
   [month-hn-id]
@@ -76,17 +78,18 @@
 
 (rfr/reg-event-db :month-set
   ;
-  ; This is kicked off by the initialize-db event and
-  ; when the user selects a new month.
+  ; This is kicked off (a) by the initialize-db event and
+  ; (b) when the user selects a new month.
   ;
-  ; No event is dispatched because month-loader/job-listing-loader, the view
+  ; No ensuing process event is dispatched because month-loader/job-listing-loader, the view
   ; below,  subscribes to [:month-load-task :page-urls-to-load] and kicks off processing in
   ; the on-load event handler.
   ;
 
   (fn [db [_ month-hn-id]]
     (let [mo-def (get-monthly-def month-hn-id)]
-      (assoc db :month-load-task (unprocessed-month month-hn-id)))))
+      (assoc db :month-load-task
+                (unprocessed-month month-hn-id)))))
 
 ;;; --- next, a component that loads pages into iframes and kicks off their processing ---------------------
 
@@ -120,11 +123,12 @@
 ;;; n.b.: these will be limits *per page*
 
 (def ATHING-PARSE-MAX 1000)
-(def JOB-LOAD-MAX 10000)                                    ;; todo: still needed?
 
 (defn job-page-athings
-  "Pretty simple. All messages are dom nodes of class aThing. Grab those
-  and later we will check the first text with vertical bars | to identify jobs."
+  "Pretty simple. All messages are dom nodes with class aThing. Grab those
+  and later we will check the opening text vertical bars | to identify jobs.
+
+  Don't judge me."
   [ifr-dom]
 
   (when-let [cont-doc (.-contentDocument ifr-dom)]

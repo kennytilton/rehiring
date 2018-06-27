@@ -61,6 +61,10 @@
   []
   (fn []
     (let [phase @(subscribe [:month-load-prop :phase])
+          ;; these next two subscriptions, shown next, are "phase aware' so
+          ;; the progress par magically switches from page culling
+          ;; to job parsing progress when the phase changes.
+
           max @(subscribe [:month-progress-max])
           made @(subscribe [:month-progress-made])
           hide-me @(subscribe [:month-load-complete?])]

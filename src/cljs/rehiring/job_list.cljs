@@ -21,16 +21,15 @@
   (.open js/window (pp/cl-format nil "https://news.ycombinator.com/item?id=~a" hn-id) "_blank"))
 
 (defn job-list-item []
-  (fn [job-no job]
-      [:li {:style {:cursor     "pointer"
+  (fn [ job]
+      [:li {:class "jobli"
+            :style {:cursor     "pointer"
                     :display    (let [excluded @(rfr/subscribe [:unotes-prop (:hn-id job) :excluded])]
                                   (if (and excluded
                                            (not @(rfr/subscribe [:show-filtered-excluded]))
                                            (not @(rfr/subscribe [:filter-active "Excluded"])))
                                     "none" "block"))
-                    :padding    "12px"
-                    :background (if (zero? (mod job-no 2))
-                                  "#eee" "#f8f8f8")}}
+                    :padding    "12px"}}
        [job-header job]
        [job-details job]]))
 
@@ -41,9 +40,9 @@
                   ;; these next defeat gratuitous default styling of ULs by browser
                   :padding         0
                   :margin          0}}
-     (doall (map (fn [jn j]
-                   ^{:key (:hn-id j)} [job-list-item jn j])
-              (range)
+     (doall (map (fn [ j]
+                   ^{:key (:hn-id j)} [job-list-item  j])
+
               (take @(rfr/subscribe [:job-display-max])
                 (job-list-sort @(rfr/subscribe [:jobs-filtered])))))]))
 
