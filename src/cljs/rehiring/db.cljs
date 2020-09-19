@@ -36,5 +36,6 @@
     (merge
       {:db (assoc (initial-db) :user-notes storage-user-notes)}
       (when-let [initial-month (nth (loader/gMonthlies-cljs) js/initialSearchMoIdx)]
+        (prn :initdb-moset js/initialSearchMoIdx initial-month)
         {:dispatch [:month-set (:hnId initial-month)]}))))
 

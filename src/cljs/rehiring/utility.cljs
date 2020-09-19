@@ -141,7 +141,6 @@
       [toggle-char toggle-db-key
        (str "Show/hide " title)
        "&#x25be", "&#x25b8" {} {}]]
-
      [:div {:class "osBody"
             :style {:background "#ff6600"
                     :display    (if @(rfr/subscribe [toggle-db-key]) "block" "none")}}

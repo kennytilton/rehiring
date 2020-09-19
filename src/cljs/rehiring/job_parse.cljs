@@ -1,5 +1,6 @@
 (ns rehiring.job-parse
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.set :as set]))
 
 ;;; key regexs used to decide job attributes for search filters
 
@@ -11,6 +12,11 @@
 (def remoteOK (js/RegExp. "remote" "i"))
 (def noremoteOK (js/RegExp. "no remote" "i"))
 
+(defn has-class? [dom class-set]
+  (when-let [raw-class (.-className dom)]
+    (seq (set/intersection class-set
+           (set (str/split raw-class #" "))))))
+
 (defn job-parse-extend
   "A parsed job (a spec) begins as {:hn-id <HN id>} then
   gets extended as we recursively explore the .aThing. Note that
@@ -18,7 +24,7 @@
   [spec dom]
 
   (let [cn (.-className dom)]
-    (when (some #{cn} ["c5a" "cae" "c00" "c9c" "cdd" "c73" "c88"])
+    (when (has-class? dom #{"c5a" "cae" "c00" "c9c" "cdd" "c73" "c88"})
       (when-let [rs (.getElementsByClassName dom "reply")]
         (map (fn [e] (.remove e)) (prim-seq rs)))
       (let [child (.-childNodes dom)
@@ -51,6 +57,7 @@
               ;(println :hseg hseg )
               (swap! spec assoc :OK true)
               (swap! spec assoc :company (nth hseg 0))
+              (swap! spec assoc :title-seg (:title-seg @s))
               (swap! spec assoc :title-search htext)
               (swap! spec assoc :body-search
                 (str/join "*4*2*"

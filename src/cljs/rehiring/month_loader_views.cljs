@@ -21,7 +21,7 @@
                 :on-change    #(dispatch [:month-set (.-value (.-target %))])}
        (let []
          (map (fn [mno mo-def]
-                (let [{:keys [hnId desc] :as all} mo-def]
+                (let [{:keys [hnId desc]} mo-def]
                   ^{:key mno} [:option {:key hnId :value hnId} desc]))
            (range)
            months))])))

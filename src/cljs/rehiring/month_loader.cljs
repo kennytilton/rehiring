@@ -116,13 +116,12 @@
     [:div {:style {:display "none"}}
      (let [task @(rfr/subscribe [:month-load-task])]
        (when (seq (:page-urls-remaining task))
-         (println :mk-pg-loader-for (:page-urls-remaining task))
          [mk-page-loader task]))]))
 
 ;;; --- dev-time limits -----------------------------
 ;;; n.b.: these will be limits *per page*
 
-(def ATHING-PARSE-MAX 1000)
+(def ATHING-PARSE-MAX 1000) ;; hhackable
 
 (defn job-page-athings
   "Pretty simple. All messages are dom nodes with class aThing. Grab those
@@ -188,7 +187,7 @@
       ;; page loader will kick off this event itself.
       {:db (assoc db :month-load-task task)})))
 
-(def ATHING_CHUNK_SZ 20)                                    ;; bigger chunks zoom due, so use small value to see progress bar working
+(def ATHING_CHUNK_SZ 10)                                    ;; bigger chunks zoom due, so use small value to see progress bar working
 
 (reg-event-fx :cull-jobs-from-athings
   (fn [{:keys [db]} [_]]
@@ -208,7 +207,7 @@
         ;;
         ;; job-parse was fun, but not relevant to the progress bar problem.
 
-        (let [new-jobs (filter #(:OK %) (map #(parse/job-parse % (:jobs-seen task)) chunk))]
+        (let [new-jobs (filter :OK (map #(parse/job-parse % (:jobs-seen task)) chunk))]
 
           {:db       (assoc db :month-load-task
                                (utl/update-multi task
@@ -223,7 +222,7 @@
            :dispatch ^:flush-dom [:cull-jobs-from-athings]
            })
 
-        ;; all athings have been processes...
+        ;; all athings have been processed...
         {:db (assoc-in db [:month-load-task :month-load-complete?] true)}))))
 
 

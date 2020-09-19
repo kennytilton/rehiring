@@ -37,7 +37,7 @@
               (let [unotes (get user-notes (:hn-id j))]
                 (and (or (not (get filters "REMOTE")) (:remote j))
                      (or (not (get filters "ONSITE")) (:onsite j))
-                     (or (not (get filters "INTERNS")) (:interns j))
+                     (or (not (get filters "INTERNS")) (:intern j))
                      (or (not (get filters "VISA")) (:visa j))
                      (or (not (get filters "Excluded")) (:excluded unotes))
                      (or (not (get filters "Noted")) (pos? (count (:notes unotes))))
