@@ -4,7 +4,20 @@ My Javascript/mxWeb&trade; ["AskHN: Who Is Hiring"](https://github.com/kennytilt
 
 If yer just lookin' for work, the JS version is [live here](https://kennytilton.github.io/whoishiring/) grace a GitHub. Or you can clone this and run it yourself. See below for a devops necessity.
 
-## Development Mode
+If ya just want to see this CLJS [re-frame](https://github.com/day8/re-frame) version of the same app run locally, jump down to "Run Application".
+
+To be fully empowered such that you can scrape a new month's "Who's Hiring?" replies, jump down to "Grab HN Pages".
+
+### Notable features
+
+#### The progress bar
+This was harder than anything. Reactive systems in general resist flowing change out of long-running batch processes such as parsing a big page of HTML. Clever Things(tm) had to be done to structure that work in a way that could fit neatly into the re-frame flow.
+
+#### Local storage
+Nothing crazy, but we do demonstrate using `reg-event-fx` to persist user annotations into local storage as they work.
+
+#### Lotsa interdependent widgets
+Other than that, just a lot of dynamic UI as the user varies inputs. Note especially that this is not just a browser: user can "star", hide, flag as applied, and record notes on different listings.
 
 ### Grab HN Pages
 The app runs off pages curl'ed straight from the HN server. So they get out of date (but see below for the script I created to run indefinitely at a specified interval to refresh them).
