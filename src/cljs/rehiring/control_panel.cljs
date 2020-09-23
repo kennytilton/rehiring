@@ -41,12 +41,13 @@
 ;;; --- the beef -----------------------------------------------------
 
 (defn control-panel []
-  (div {:style {:background "#ffb57d"}}
-    (utl/open-shut-case :show-filters "Filters"
-      (flt/mk-title-selects)
-      (flt/mk-user-selects)
+  (fn []
+    [:div {:style {:background "#ffb57d"}}
+     [utl/open-shut-case :show-filters "Filters"
+      flt/mk-title-selects
+      flt/mk-user-selects]
 
-      (rgx/mk-regex-search)
+     [rgx/mk-regex-search]
 
      [sort-bar]
 
