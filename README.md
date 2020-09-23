@@ -1,19 +1,20 @@
 # rehiring
 
-My Javascript/mxWeb&trade; ["AskHN: Who Is Hiring"](https://github.com/kennytilton/whoshiring) browser ported to CLJS/[re-frame](https://github.com/Day8/re-frame). Search and annotate the hundreds of jobs listed every month.
+Search and annotate the hundreds of jobs listed every month.
 
-If yer just lookin' for work, the JS version is [live here](https://kennytilton.github.io/whoishiring/) grace a GitHub. Or you can clone this and run it yourself. See below for a devops necessity.
+My Javascript/mxWeb&trade; ["AskHN: Who Is Hiring"](https://github.com/kennytilton/whoshiring) browser ported to CLJS/[re-frame](https://github.com/Day8/re-frame), offered FWIW to `re-frame` noobs everywhere. A `Reagent` version is [here](https://github.com/kennytilton/hiringagent) and a [Matrix](https://github.com/kennytilton/matrix) version is in progress.
 
-If ya just want to see this CLJS [re-frame](https://github.com/day8/re-frame) version of the same app run locally, jump down to "Run Application".
-
-To be fully empowered such that you can scrape a new month's "Who's Hiring?" replies, jump down to "Grab HN Pages".
+Moving along...
+* If yer just lookin' for work, the JS version is [live here](https://kennytilton.github.io/whoishiring/) grace a GitHub. Or you can clone this and run it yourself. See below for a devops necessity.
+* If ya just want to see this CLJS [re-frame](https://github.com/day8/re-frame) version of run locally, jump down to "Run Application".
+* To be fully empowered such that you can scrape a new month's "Who's Hiring?" replies, jump down to "Grab HN Pages".
 
 ### Notable features
 
 #### The progress bar
-This was harder than anything. Reactive systems in general resist flowing change out of long-running batch processes such as parsing a big page of HTML. Clever Things(tm) had to be done to structure that work in a way that could fit neatly into the re-frame flow.
+This was harder than anything. Reactive systems in general resist flowing change out of long-running batch processes such as parsing a big page of HTML. Clever Things(tm) had to be done to structure that work in a way that could fit neatly into the re-frame flow. One hack to note is flushing the DOM so the user actually gets to see something. (I am looking at you, Mac OS X installs.)
 
-#### Local storage
+#### Persistence
 Nothing crazy, but we do demonstrate using `reg-event-fx` to persist user annotations into local storage as they work.
 
 #### Lotsa interdependent widgets
