@@ -33,7 +33,7 @@
     (if-let [mo-def (get-monthly-def month-hn-id)]          ;; hard-coded table in index.html
       (map (fn [pg-offset]
              ;; files are numbered off-by-one to match the page param on HN
-             (pp/cl-format nil "files/~a/~a.html" month-hn-id (inc pg-offset)))
+             (pp/cl-format nil "/files/~a/~a.html" month-hn-id (inc pg-offset)))
         (range (:pgCount mo-def)))
       (throw (js/Exception. (str "msg id " month-hn-id " not defined in gMonthlies table."))))))
 
